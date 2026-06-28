@@ -5,6 +5,7 @@ import { getAndInstruction } from './instructions/and.js'
 import { getLeaInstruction } from './instructions/lea.js'
 import { getXorInstruction } from './instructions/xor.js'
 import { getCallInstruction } from './instructions/call.js'
+import { getMovInstruction } from './instructions/mov.js'
 
 
 const INSTR = {
@@ -13,6 +14,7 @@ const INSTR = {
   'lea': getLeaInstruction,
   'xor': getXorInstruction,
   'call': getCallInstruction,
+  'mov': getMovInstruction,
 }
 
 
@@ -219,6 +221,33 @@ export function generatePrintfExecutable(outputPath) {
         addr: OFFSET+2,
       })
     }*/
+    if(ins=='mov'){//if(asm=='call [printf]'){
+      //result = 'FF 15 00 00 00 00'
+      let dataName = ''
+      if(params[1].indexOf('[')>-1){
+        dataName = params[1].replace(/\[|\]/gm,'')
+        params[1] = '[0x00000000]'
+        result = getCallInstruction(params)
+        REPL.push({
+          name: dataName,//'printf',
+          offset: OFFSET,
+          length: result.replace(/\ /gm,'').length/2,
+          addr: OFFSET+3,
+        })
+      }else if(params[2].indexOf('[')>-1){
+        dataName = params[2].replace(/\[|\]/gm,'')
+        params[2] = '[0x00000000]'
+        result = getCallInstruction(params)
+        REPL.push({
+          name: dataName,//'printf',
+          offset: OFFSET,
+          length: result.replace(/\ /gm,'').length/2,
+          addr: OFFSET+3,
+        })
+      }else{
+        result = getMovInstruction(params)
+      }
+    }
 
     
 
@@ -236,12 +265,13 @@ export function generatePrintfExecutable(outputPath) {
   let code = `sub rsp, 40
     and rsp, -16
 
-    lea rcx, [hello]
+    lea rax, [hello]
+    mov rcx, rax
     xor eax, eax
     
     call [printf]
     
-    xor ecx, ecx         
+    xor ecx, ecx
     
     call [ExitProcess]
   `
