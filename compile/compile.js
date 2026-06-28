@@ -159,6 +159,22 @@ export function generateExecutable(outputPath) {
 
 
 
+  function IntToHex8(value) {
+    // Upewnij się, że pracujemy na liczbie całkowitej 32‑bitowej
+    const v = value >>> 0; // konwersja do nieznakowanej liczby 32‑bitowej
+
+    // Zamiana na hex
+    let hex = v.toString(16).toUpperCase();
+
+    // Dopełnienie zerami z przodu do długości 8
+    while (hex.length < 8) {
+      hex = "0" + hex;
+    }
+
+    return hex;
+  }
+
+
 
 
 
@@ -172,11 +188,19 @@ export function generateExecutable(outputPath) {
   SECTIONS.data.split('\n').map(line=>{
     if(line.trim().length){
       const parts = line.trim().split(' ')
-      DATA.push({
-        name: parts[0],
-        kind: parts[1],
-        value: parts[2].replace(',0','').replace(/\'/gm,'')+'\0',
-      })
+      if(parts[1]=='db'){
+        DATA.push({
+          name: parts[0],
+          kind: parts[1],
+          value: parts[2].replace(',0','').replace(/\'/gm,'')+'\0',
+        })
+      }else if(parts[1]=='dq'){
+        DATA.push({
+          name: parts[0],
+          kind: parts[1],
+          value: '0x'+IntToHex8(parts[2]) +'',
+        })
+      }
     }
   })
 
@@ -191,7 +215,11 @@ export function generateExecutable(outputPath) {
   let dataOffset = 0
   for(const DTA of DATA){
     ADDR[DTA.name] = RVA_STRING_HELLO+dataOffset
-    dataOffset += DTA.value.length
+    if(DTA.kind=='db'){
+      dataOffset += DTA.value.length
+    }else if(DTA.kind=='dq'){
+      dataOffset += 8
+    }
   }
   //ADDR.hello = RVA_STRING_HELLO
   //ADDR.test = RVA_STRING_HELLO+'Hello World!\n\0'.length
@@ -470,7 +498,11 @@ export function generateExecutable(outputPath) {
   dataOffset = 0
   for(const DTA of DATA){
     //exe.set(enc.encode(DTA.value), idataRaw + 0xC0 + dataOffset);
-    dataOffset += DTA.value.length
+    if(DTA.kind=='db'){
+      dataOffset += DTA.value.length
+    }else if(DTA.kind=='dq'){
+      dataOffset += 8
+    }
   }
   console.log(0xC0 + dataOffset)
   const iatSize = Math.ceil((0xC0 + dataOffset)/512)*512
@@ -552,8 +584,14 @@ export function generateExecutable(outputPath) {
   //exe.set(enc.encode('test!\n\0'), idataRaw + 0xC0+'Hello World!\n\0'.length);
   dataOffset = 0
   for(const DTA of DATA){
-    exe.set(enc.encode(DTA.value), idataRaw + 0xC0 + dataOffset);
-    dataOffset += DTA.value.length
+    if(DTA.kind=='db'){
+      exe.set(enc.encode(DTA.value), idataRaw + 0xC0 + dataOffset);
+      dataOffset += DTA.value.length
+    }else if(DTA.kind=='dq'){
+      //exe.set(enc.encode(DTA.value), idataRaw + 0xC0 + dataOffset);
+      writeUInt32LE(exe, DTA.value, idataRaw + 0xC0 + dataOffset);
+      dataOffset += 8
+    }
   }
 
   console.log(0xC0 + dataOffset)

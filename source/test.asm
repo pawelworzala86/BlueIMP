@@ -4,6 +4,7 @@
 
     lea rax, [test]
     mov rcx, rax
+    mov rdx, [num]
     xor eax, eax
 
     call [printf]
@@ -13,7 +14,8 @@
     call [ExitProcess]
 
 .data
-    test db 'test!',0
+    test db 'num=%i',0
+    num dq 123
 
 .import
     library kernel32,'KERNEL32.DLL',\
