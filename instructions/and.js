@@ -1,11 +1,9 @@
-export function getSubInstruction(parts) {
-  // parts = ['sub','rsp','0x28']  OR  ['sub','rsp','[0x00000000]']
-
+export function getAndInstruction(parts) {
   const mnemonic = parts[0];
   const reg = parts[1];
   let arg = parts[2];
 
-  if (mnemonic !== "sub") return null;
+  if (mnemonic !== "and") return null;
 
   const REG_MAP = {
     rax: 0, rcx: 1, rdx: 2, rbx: 3,
@@ -18,23 +16,22 @@ export function getSubInstruction(parts) {
   if (regId === undefined) return null;
 
   // -----------------------------
-  // CASE 1: sub r64, [disp32]
+  // CASE 1: and r64, [disp32]
   // -----------------------------
   if (arg.startsWith("[") && arg.endsWith("]")) {
-    let addr = arg.slice(1, -1); // remove [ ]
+    let addr = arg.slice(1, -1);
+
     if (addr.startsWith("0x")) addr = parseInt(addr, 16);
     else addr = Number(addr);
 
     const bytes = [];
 
     bytes.push("48"); // REX.W
-    bytes.push("2B"); // SUB r64, r/m64
+    bytes.push("23"); // AND r64, r/m64
 
-    // ModR/M: reg = regId, rm = 5 (absolute disp32)
-    const modrm = (regId << 3) | 5;
+    const modrm = (regId << 3) | 5; // rm=5 → disp32
     bytes.push(modrm.toString(16).padStart(2, "0"));
 
-    // disp32
     bytes.push(
       (addr & 0xFF).toString(16).padStart(2, "0"),
       ((addr >> 8) & 0xFF).toString(16).padStart(2, "0"),
@@ -46,27 +43,30 @@ export function getSubInstruction(parts) {
   }
 
   // -----------------------------
-  // CASE 2: sub r64, imm
+  // CASE 2: and r64, imm
   // -----------------------------
   let imm = arg;
 
+  // KONWERSJA DO LICZBY — KLUCZOWA POPRAWKA
   if (imm.startsWith("0x")) imm = parseInt(imm, 16);
   else imm = Number(imm);
 
   const bytes = [];
 
-  // 64-bit → REX.W
-  bytes.push("48");
+  bytes.push("48"); // REX.W
 
-  if (imm <= 0x7F) {
-    // imm8 → 83 /5 ib
+  // imm8 → 83 /4 ib
+  if (imm >= -128 && imm <= 127) {
     bytes.push("83");
-    bytes.push((0xE8 | regId).toString(16).padStart(2, "0"));
-    bytes.push(imm.toString(16).padStart(2, "0"));
-  } else {
-    // imm32 → 81 /5 id
+    bytes.push((0xE0 | regId).toString(16).padStart(2, "0"));
+    bytes.push((imm & 0xFF).toString(16).padStart(2, "0"));
+  }
+
+  // imm32 → 81 /4 id
+  else {
     bytes.push("81");
-    bytes.push((0xE8 | regId).toString(16).padStart(2, "0"));
+    bytes.push((0xE0 | regId).toString(16).padStart(2, "0"));
+
     bytes.push(
       (imm & 0xFF).toString(16).padStart(2, "0"),
       ((imm >> 8) & 0xFF).toString(16).padStart(2, "0"),
@@ -78,5 +78,5 @@ export function getSubInstruction(parts) {
   return bytes.join(" ").toUpperCase();
 }
 
-console.log(getSubInstruction(['sub','rsp','40']))//return '48 83 EC 28'
-console.log(getSubInstruction(['sub','rsp','[0x00000000]']))
+console.log(getAndInstruction(['and','rsp','-16']))
+console.log(getAndInstruction(['and','rsp','[0x00000000]']))

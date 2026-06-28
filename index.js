@@ -1,9 +1,14 @@
 import fs from 'fs';
 
 import { getSubInstruction } from './instructions/sub.js'
+import { getAndInstruction } from './instructions/and.js'
+import { getLeaInstruction } from './instructions/lea.js'
+
 
 const INSTR = {
   'sub': getSubInstruction,
+  'and': getAndInstruction,
+  'lea': getLeaInstruction,
 }
 
 
@@ -156,17 +161,25 @@ export function generatePrintfExecutable(outputPath) {
       return ''
     }
     let result = ''
+
+    let params = asm.replace(/\,/gm,'').trim().split(' ')
+    let ins = params[0]
     
     /*if(asm=='sub rsp, 40'){
       result = '48 83 EC 28'
     }*/
-    if(asm=='and rsp, -16'){
-      result = '48 83 E4 F0'
-    }
-    if(asm=='lea rcx, [hello]'){
-      result = '48 8D 0D 00 00 00 00'
+    //if(asm=='and rsp, -16'){
+    //  result = '48 83 E4 F0'
+    //}
+    if(ins=='lea'){//(asm=='lea rcx, [hello]'){
+      let dataName = ''
+      if(params[2].indexOf('[')>-1){
+        dataName = params[2].replace(/\[|\]/gm,'')
+        params[2] = '[0x00000000]'
+      }
+      result = getLeaInstruction(params)//'48 8D 0D 00 00 00 00'
       REPL.push({
-        name: 'hello',
+        name: dataName,//'hello',
         offset: OFFSET,
         length: result.replace(/\ /gm,'').length/2,
         addr: OFFSET+3,
@@ -197,8 +210,7 @@ export function generatePrintfExecutable(outputPath) {
       })
     }
 
-    let params = asm.replace(/\,/gm,'').trim().split(' ')
-    let ins = params[0]
+    
 
     if(INSTR[ins]&&!result.length){
       result = INSTR[ins](params)
