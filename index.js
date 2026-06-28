@@ -88,9 +88,38 @@ export function generatePrintfExecutable(outputPath) {
   // --- 5. SEKCJA KODU .text (Raw = 0x200, RVA = 0x1000) ---
   // Definiujemy docelowe adresy struktur w pamięci (RVA)
   const RVA_TEXT_START = 0x1000;
-  const RVA_IAT_EXIT_PROCESS = 0x2000;
-  const RVA_IAT_PRINTF = 0x2010;
   const RVA_STRING_HELLO = 0x20C0;
+
+  const IAT = [
+    { dll: 'kernel32.dll', functions: [{ name: 'ExitProcess' }] },
+    { dll: 'msvcrt.dll', functions: [{ name: 'printf' }] },
+  ];
+
+  const importEntries = [];
+  const importByName = {};
+  let nextHintNameRva = 0x2080;
+  let nextIatRva = 0x2000;
+  let nextDllNameRva = 0x20A0;
+
+  for (const dllEntry of IAT) {
+    for (const fn of dllEntry.functions) {
+      const entry = {
+        dll: dllEntry.dll,
+        name: fn.name,
+        hintNameRva: nextHintNameRva,
+        iatRva: nextIatRva,
+        dllNameRva: nextDllNameRva,
+      };
+      importEntries.push(entry);
+      importByName[fn.name] = entry;
+      nextHintNameRva += 0x14;
+      nextIatRva += 0x10;
+    }
+    nextDllNameRva += dllEntry.dll.length + 1;
+  }
+
+  const RVA_IAT_EXIT_PROCESS = importByName.ExitProcess.iatRva;
+  const RVA_IAT_PRINTF = importByName.printf.iatRva;
 
   // Szkielet instrukcji assemblera
   const code = new Uint8Array([
@@ -134,45 +163,53 @@ export function generatePrintfExecutable(outputPath) {
   // Zapisanie gotowego kodu do pliku
   exe.set(code, 0x200);
 
+
+
+
+
+
+
+
+
   // --- 6. SEKCJA IMPORTÓW .idata (Raw = 0x400, RVA = 0x2000) ---
   const idataRaw = 0x400;
 
-  // IAT dla kernel32.dll (RVA 0x2000)
-  writeUInt32LE(exe, 0x00002080, idataRaw + 0x00); // Wskaźnik do ExitProcess Hint/Name
-  // 0x08 - 0x0F: NULL Terminator dla kernel32
+  for (const entry of importEntries) {
+    writeUInt32LE(exe, entry.hintNameRva, idataRaw + (entry.iatRva - 0x2000));
+  }
 
-  // IAT dla msvcrt.dll (RVA 0x2010)
-  writeUInt32LE(exe, 0x00002094, idataRaw + 0x10); // Wskaźnik do printf Hint/Name
-  // 0x18 - 0x1F: NULL Terminator dla msvcrt
-
-  // Import Directory Table (RVA 0x2020)
   const dirOff = idataRaw + 0x20;
-  
-  // Wpis 1: kernel32.dll
-  writeUInt32LE(exe, 0x00002060, dirOff + 0);  // ILT RVA
-  writeUInt32LE(exe, 0x000020A0, dirOff + 12); // Nazwa DLL RVA ("kernel32.dll")
-  writeUInt32LE(exe, 0x00002000, dirOff + 16); // IAT RVA
+  for (let i = 0; i < IAT.length; i += 1) {
+    const dllEntry = IAT[i];
+    const dirEntryOffset = dirOff + i * 20;
+    const firstEntry = importEntries.find((entry) => entry.dll === dllEntry.dll);
+    const dllNameRva = firstEntry ? firstEntry.dllNameRva : 0x20A0 + i * 0x10;
 
-  // Wpis 2: msvcrt.dll
-  writeUInt32LE(exe, 0x00002070, dirOff + 20); // ILT RVA
-  writeUInt32LE(exe, 0x000020AD, dirOff + 32); // Nazwa DLL RVA ("msvcrt.dll")
-  writeUInt32LE(exe, 0x00002010, dirOff + 36); // IAT RVA
+    writeUInt32LE(exe, 0x00002060 + i * 0x10, dirEntryOffset + 0);
+    writeUInt32LE(exe, dllNameRva, dirEntryOffset + 12);
+    writeUInt32LE(exe, 0x00002000 + i * 0x10, dirEntryOffset + 16);
+  }
 
-  // ILT (Kopie tabel IAT)
-  writeUInt32LE(exe, 0x00002080, idataRaw + 0x60); // kernel32 ILT 
-  writeUInt32LE(exe, 0x00002094, idataRaw + 0x70); // msvcrt ILT   
+  let iltOffset = idataRaw + 0x60;
+  for (const entry of importEntries) {
+    writeUInt32LE(exe, entry.hintNameRva, iltOffset);
+    iltOffset += 0x10;
+  }
 
-  // --- STRINGS, HINTS & NAMES ---
   const enc = new TextEncoder();
-  
-  exe.set(enc.encode('\0\0ExitProcess\0'), idataRaw + 0x80); // RVA 0x2080
-  exe.set(enc.encode('\0\0printf\0'), idataRaw + 0x94);      // RVA 0x2094
+  for (const entry of importEntries) {
+    exe.set(enc.encode(`\0\0${entry.name}\0`), idataRaw + (entry.hintNameRva - 0x2000));
+  }
 
-  exe.set(enc.encode('kernel32.dll\0'), idataRaw + 0xA0);    // RVA 0x20A0
-  exe.set(enc.encode('msvcrt.dll\0'), idataRaw + 0xAD);      // RVA 0x20AD
+  for (const dllEntry of IAT) {
+    const firstEntry = importEntries.find((entry) => entry.dll === dllEntry.dll);
+    if (firstEntry) {
+      exe.set(enc.encode(`${dllEntry.dll}\0`), idataRaw + (firstEntry.dllNameRva - 0x2000));
+    }
+  }
 
   // Tekst przekazywany do printf (0x0A to nowa linia \n)
-  exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);   // RVA 0x20C0
+  exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);
 
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
