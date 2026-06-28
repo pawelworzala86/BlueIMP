@@ -465,7 +465,7 @@ export function generateExecutable(outputPath) {
 
 
 
-  const idataRaw = 0x600;
+  const idataRaw = 1024+512
 
   const exe = writePEHeader(2048,
     1024,512,
