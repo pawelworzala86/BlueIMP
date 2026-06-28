@@ -54,8 +54,8 @@ function writeUInt16LE(array, value, offset) {
 }
 
 export function generateExecutable(outputPath) {
-  function writePEHeader(){
-    const fileSize = 0x600; 
+  function writePEHeader(fileSize,textSize,textPointer,idataSize,idataPointer){
+    //const fileSize = 0x800; 
     const exe = new Uint8Array(fileSize);
 
     // --- 1. DOS HEADER ---
@@ -114,8 +114,8 @@ export function generateExecutable(outputPath) {
     exe.set(new TextEncoder().encode('.text\0\0\0'), secOffset);
     writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
     writeUInt32LE(exe, 0x00001000, secOffset + 12); // Virtual Address (RVA 0x1000)
-    writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
-    writeUInt32LE(exe, 0x00000200, secOffset + 20); // Pointer to Raw Data (0x200)
+    writeUInt32LE(exe, textSize, secOffset + 16); // Size of Raw Data
+    writeUInt32LE(exe, textPointer, secOffset + 20); // Pointer to Raw Data (0x200)
     writeUInt32LE(exe, 0x60000020, secOffset + 36); // CODE | EXECUTE | READ
 
     // Sekcja .idata
@@ -123,8 +123,8 @@ export function generateExecutable(outputPath) {
     exe.set(new TextEncoder().encode('.idata\0\0'), secOffset);
     writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
     writeUInt32LE(exe, 0x00002000, secOffset + 12); // Virtual Address (RVA 0x2000)
-    writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
-    writeUInt32LE(exe, 0x00000400, secOffset + 20); // Pointer to Raw Data (0x400)
+    writeUInt32LE(exe, idataSize, secOffset + 16); // Size of Raw Data
+    writeUInt32LE(exe, idataPointer, secOffset + 20); // Pointer to Raw Data (0x400)
     writeUInt32LE(exe, 0xC0000040, secOffset + 36); // INITIALIZED_DATA | READ | WRITE
 
     return exe
@@ -463,7 +463,14 @@ export function generateExecutable(outputPath) {
 */
   // Zapisanie gotowego kodu do pliku
 
-  const exe = writePEHeader()
+
+
+  const idataRaw = 0x600;
+
+  const exe = writePEHeader(2048,
+    1024,512,
+    512,1024+512,
+  )
 
   exe.set(code, 0x200);
 
@@ -485,7 +492,7 @@ export function generateExecutable(outputPath) {
 
 
   // --- 6. SEKCJA IMPORTÓW .idata (Raw = 0x400, RVA = 0x2000) ---
-  const idataRaw = 0x400;
+  //const idataRaw = 0x600;
 
   for (const entry of importEntries) {
     writeUInt32LE(exe, entry.hintNameRva, idataRaw + (entry.iatRva - 0x2000));
