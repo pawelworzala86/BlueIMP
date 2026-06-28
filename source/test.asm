@@ -14,3 +14,11 @@
 
 .data
     test db 'test!',0
+
+.import
+    library kernel32,'KERNEL32.DLL',\
+        msvcrt,'MSVCRT.DLL'
+    import kernel32,\
+        ExitProcess,'ExitProcess'
+    import msvcrt,\
+        printf,'printf'

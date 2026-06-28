@@ -198,10 +198,54 @@ export function generateExecutable(outputPath) {
 
 
 
-  const IAT = [
-    { dll: 'kernel32.dll', functions: [{ name: 'ExitProcess' }] },
-    { dll: 'msvcrt.dll', functions: [{ name: 'printf' },{ name: 'malloc' }] },
-  ];
+  const IAT = []
+    //{ dll: 'kernel32.dll', functions: [{ name: 'ExitProcess' }] },
+    //{ dll: 'msvcrt.dll', functions: [{ name: 'printf' },{ name: 'malloc' }] },
+  //];
+
+  //const imp = {}
+
+  function addDLL(name,dll){
+      IAT.push({name,dll,functions:[]})
+  }
+  function addDllFunc(name,from,target){
+    let dll = null
+    IAT.map(i=>{
+      if(i.name==name){
+        dll = i
+      }
+    })
+    dll.functions.push({name:from})
+  }
+
+  function importFromData(data){
+    data=data.replace(/\,\\\r\n/gm,',')
+    data=data.replace(/\,\\\n/gm,',')
+    data=data.replace(/\'/gm,'')
+    data.replace(/library.*/gm,match=>{
+        let parts = match.replace('library','').trim().split(',').map(p=>p.trim())
+        //console.log(parts)
+        for(let i=0;i<parts.length;i+=2){
+            addDLL(parts[i],parts[i+1])
+        }
+    })
+    console.log('import',data)
+    data.replace(/import.*/gm,match=>{
+        let parts = match.replace('import','').trim().split(',').map(p=>p.trim())
+        console.log(parts)
+        let name = parts[0]
+        for(let i=1;i<parts.length;i+=2){
+            //if(new RegExp('\\['+parts[i]+'\\]','gm').exec(data)){
+                addDllFunc(name,parts[i],parts[i+1])
+            //}
+        }
+    })
+    //console.log(data)
+  }
+  importFromData(SECTIONS.import)
+  console.log('IAT',IAT)
+
+
 
   const importEntries = [];
   const importByName = {};
