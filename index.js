@@ -1,5 +1,13 @@
 import fs from 'fs';
 
+import { getSubInstruction } from './instructions/sub.js'
+
+const INSTR = {
+  'sub': getSubInstruction,
+}
+
+
+
 function writeUInt32LE(array, value, offset) {
   array[offset] = value & 0xff;
   array[offset + 1] = (value >> 8) & 0xff;
@@ -149,9 +157,9 @@ export function generatePrintfExecutable(outputPath) {
     }
     let result = ''
     
-    if(asm=='sub rsp, 40'){
+    /*if(asm=='sub rsp, 40'){
       result = '48 83 EC 28'
-    }
+    }*/
     if(asm=='and rsp, -16'){
       result = '48 83 E4 F0'
     }
@@ -187,6 +195,13 @@ export function generatePrintfExecutable(outputPath) {
         length: result.replace(/\ /gm,'').length/2,
         addr: OFFSET+2,
       })
+    }
+
+    let params = asm.replace(/\,/gm,'').trim().split(' ')
+    let ins = params[0]
+
+    if(INSTR[ins]&&!result.length){
+      result = INSTR[ins](params)
     }
 
     OFFSET += result.split(' ').length
