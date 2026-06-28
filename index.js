@@ -154,19 +154,19 @@ export function generatePrintfExecutable(outputPath) {
   
   // 1. Obliczenie offsetu dla LEA RCX (String "Hello World!\n")
   // RIP po wykonaniu instrukcji LEA (rozmiar instrukcji to 7 bajtów) = RVA_TEXT_START + 0x08 + 7 = 0x100F
-  const ripAfterLea = RVA_TEXT_START + 0x08 + 7;
+  const ripAfterLea = RVA_TEXT_START + 0x08 + 7; //OFFSET=8
   const offsetToHello = RVA_STRING_HELLO - ripAfterLea;
   writeUInt32LE(code, offsetToHello, 0x0B);
 
   // 2. Obliczenie offsetu dla CALL PRINTF
   // RIP po wykonaniu instrukcji CALL (rozmiar instrukcji to 6 bajtów) = RVA_TEXT_START + 0x11 + 6 = 0x1017
-  const ripAfterPrintf = RVA_TEXT_START + 0x11 + 6;
+  const ripAfterPrintf = RVA_TEXT_START + 0x11 + 6;  //OFFSET=0x11 = 17
   const offsetToPrintf = RVA_IAT_PRINTF - ripAfterPrintf;
   writeUInt32LE(code, offsetToPrintf, 0x13);
 
   // 3. Obliczenie offsetu dla CALL EXITPROCESS
   // RIP po wykonaniu instrukcji CALL (rozmiar instrukcji to 6 bajtów) = RVA_TEXT_START + 0x19 + 6 = 0x101F
-  const ripAfterExit = RVA_TEXT_START + 0x19 + 6;
+  const ripAfterExit = RVA_TEXT_START + 0x19 + 6;  //OFFSET=0x19 = 25
   const offsetToExit = RVA_IAT_EXIT_PROCESS - ripAfterExit;
   writeUInt32LE(code, offsetToExit, 0x1B);
 
