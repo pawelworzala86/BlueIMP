@@ -85,12 +85,22 @@ export function generatePrintfExecutable(outputPath) {
   writeUInt32LE(exe, 0x00000400, secOffset + 20); // Pointer to Raw Data (0x400)
   writeUInt32LE(exe, 0xC0000040, secOffset + 36); // INITIALIZED_DATA | READ | WRITE
 
+
+
+
+  const ADDR = {}
+
+
+
+
+
+
   // --- 5. SEKCJA KODU .text (Raw = 0x200, RVA = 0x1000) ---
   // Definiujemy docelowe adresy struktur w pamięci (RVA)
   const RVA_TEXT_START = 0x1000;
   const RVA_STRING_HELLO = 0x20C0;
 
-
+  ADDR.hello = RVA_STRING_HELLO
 
 
 
@@ -123,16 +133,101 @@ export function generatePrintfExecutable(outputPath) {
     nextDllNameRva += dllEntry.dll.length + 1;
   }
 
-  const RVA_IAT_EXIT_PROCESS = importByName.ExitProcess.iatRva;
-  const RVA_IAT_PRINTF = importByName.printf.iatRva;
+  //const RVA_IAT_EXIT_PROCESS = importByName.ExitProcess.iatRva;
+  //const RVA_IAT_PRINTF = importByName.printf.iatRva;
 
+  ADDR.ExitProcess = importByName.ExitProcess.iatRva
+  ADDR.printf = importByName.printf.iatRva
+
+  const REPL = []
+
+  let OFFSET = 0
+  function getHex(asm){
+    asm = asm.trim()
+    if(asm.length==0){
+      return ''
+    }
+    let result = ''
+    
+    if(asm=='sub rsp, 40'){
+      result = '48 83 EC 28'
+    }
+    if(asm=='and rsp, -16'){
+      result = '48 83 E4 F0'
+    }
+    if(asm=='lea rcx, [hello]'){
+      result = '48 8D 0D 00 00 00 00'
+      REPL.push({
+        name: 'hello',
+        offset: OFFSET,
+        length: result.replace(/\ /gm,'').length/2,
+        addr: OFFSET+3,
+      })
+    }
+    if(asm=='xor eax, eax'){
+      result = '31 C0'
+    }
+    if(asm=='call [printf]'){
+      result = 'FF 15 00 00 00 00'
+      REPL.push({
+        name: 'printf',
+        offset: OFFSET,
+        length: result.replace(/\ /gm,'').length/2,
+        addr: OFFSET+2,
+      })
+    }
+    if(asm=='xor ecx, ecx'){
+      result = '31 C9'
+    }
+    if(asm=='call [ExitProcess]'){
+      result = 'FF 15 00 00 00 00'
+      REPL.push({
+        name: 'ExitProcess',
+        offset: OFFSET,
+        length: result.replace(/\ /gm,'').length/2,
+        addr: OFFSET+2,
+      })
+    }
+
+    OFFSET += result.split(' ').length
+    return result
+  }
 
 
   //console.log(importEntries)
 
+  let code = `sub rsp, 40
+    and rsp, -16
+
+    lea rcx, [hello]
+    xor eax, eax
+    
+    call [printf]
+    
+    xor ecx, ecx         
+    
+    call [ExitProcess]
+  `
+  let lines = code.split('\n').map(line=>{
+    if(line.length){
+      return getHex(line)
+    }
+    return line
+  })
+  code = lines.join('\n')
+  code = code.replace(/\n|\ /gm,'')
+  //console.log(code)
+
+  function hexToU8(hex) {
+    const arr = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < arr.length; i++) {
+      arr[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return arr;
+  }
 
   // Szkielet instrukcji assemblera
-  const code = new Uint8Array([
+  code = hexToU8(code)/*new Uint8Array([
     0x48, 0x83, 0xEC, 0x28,                         // 0x1000: sub rsp, 40          ; Rezerwacja shadow space i podstawowe wyrównanie
     0x48, 0x83, 0xE4, 0xF0,                         // 0x1004: and rsp, -16         ; Wymuszenie twardego wyrównania stosu do 16 bajtów
     
@@ -148,30 +243,49 @@ export function generatePrintfExecutable(outputPath) {
     
     // call [RIP + offset] -> Wywołaj ExitProcess z IAT
     0xFF, 0x15, 0x00, 0x00, 0x00, 0x00              // 0x1019: call [RIP + ?]       ; Miejsce na offset (będzie pod indeksem 0x101B)
-  ]);
+  ]);*/
+
+
+
+  console.log(REPL)
+
+  for(const RP of REPL){
+    const ripAfterLea = RVA_TEXT_START + RP.offset + RP.length
+    const offsetToUse = ADDR[RP.name] - ripAfterLea
+    writeUInt32LE(code, offsetToUse, RP.addr)
+  }
 
   // --- DYNAMICZNE OBLICZANIE OFFSETÓW RIP-RELATIVE ---
   
-  // 1. Obliczenie offsetu dla LEA RCX (String "Hello World!\n")
+  /*// 1. Obliczenie offsetu dla LEA RCX (String "Hello World!\n")
   // RIP po wykonaniu instrukcji LEA (rozmiar instrukcji to 7 bajtów) = RVA_TEXT_START + 0x08 + 7 = 0x100F
   const ripAfterLea = RVA_TEXT_START + 0x08 + 7; //OFFSET=8
-  const offsetToHello = RVA_STRING_HELLO - ripAfterLea;
+  const offsetToHello = ADDR.hello - ripAfterLea;
   writeUInt32LE(code, offsetToHello, 0x0B);
 
   // 2. Obliczenie offsetu dla CALL PRINTF
   // RIP po wykonaniu instrukcji CALL (rozmiar instrukcji to 6 bajtów) = RVA_TEXT_START + 0x11 + 6 = 0x1017
   const ripAfterPrintf = RVA_TEXT_START + 0x11 + 6;  //OFFSET=0x11 = 17
-  const offsetToPrintf = RVA_IAT_PRINTF - ripAfterPrintf;
+  const offsetToPrintf = ADDR.printf - ripAfterPrintf;
   writeUInt32LE(code, offsetToPrintf, 0x13);
 
   // 3. Obliczenie offsetu dla CALL EXITPROCESS
   // RIP po wykonaniu instrukcji CALL (rozmiar instrukcji to 6 bajtów) = RVA_TEXT_START + 0x19 + 6 = 0x101F
   const ripAfterExit = RVA_TEXT_START + 0x19 + 6;  //OFFSET=0x19 = 25
-  const offsetToExit = RVA_IAT_EXIT_PROCESS - ripAfterExit;
+  const offsetToExit = ADDR.ExitProcess - ripAfterExit;
   writeUInt32LE(code, offsetToExit, 0x1B);
-
+*/
   // Zapisanie gotowego kodu do pliku
   exe.set(code, 0x200);
+
+
+
+
+
+
+
+
+
 
 
 
