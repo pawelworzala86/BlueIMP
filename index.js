@@ -31,7 +31,7 @@ function writeUInt16LE(array, value, offset) {
   array[offset + 1] = (value >> 8) & 0xff;
 }
 
-export function generatePrintfExecutable(outputPath) {
+export function generateExecutable(outputPath) {
   const fileSize = 0x600; 
   const exe = new Uint8Array(fileSize);
 
@@ -406,4 +406,4 @@ export function generatePrintfExecutable(outputPath) {
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
 }
 
-generatePrintfExecutable('./hello_printf.exe');
+generateExecutable('./out/test.exe');
