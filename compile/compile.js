@@ -54,78 +54,81 @@ function writeUInt16LE(array, value, offset) {
 }
 
 export function generateExecutable(outputPath) {
-  const fileSize = 0x600; 
-  const exe = new Uint8Array(fileSize);
+  function writePEHeader(){
+    const fileSize = 0x600; 
+    const exe = new Uint8Array(fileSize);
 
-  // --- 1. DOS HEADER ---
-  exe[0] = 0x4D; exe[1] = 0x5A; // 'MZ'
-  writeUInt32LE(exe, 0x00000080, 0x3C); // e_lfanew = 0x80
+    // --- 1. DOS HEADER ---
+    exe[0] = 0x4D; exe[1] = 0x5A; // 'MZ'
+    writeUInt32LE(exe, 0x00000080, 0x3C); // e_lfanew = 0x80
 
-  // --- 2. PE HEADER (COFF) ---
-  const peOffset = 0x80;
-  exe[peOffset] = 0x50; exe[peOffset + 1] = 0x45; // 'PE\0\0'
-  writeUInt16LE(exe, 0x8664, peOffset + 4);     // Machine: AMD64 (64-bit)
-  writeUInt16LE(exe, 2, peOffset + 6);          // Number of Sections: 2 (.text, .idata)
-  writeUInt32LE(exe, 0x60000000, peOffset + 8); // TimeDateStamp
-  writeUInt16LE(exe, 0xF0, peOffset + 20);      // Size of Optional Header (240 bajtów)
-  writeUInt16LE(exe, 0x0022, peOffset + 22);    // Characteristics: EXECUTABLE_IMAGE | LARGE_ADDRESS_AWARE
+    // --- 2. PE HEADER (COFF) ---
+    const peOffset = 0x80;
+    exe[peOffset] = 0x50; exe[peOffset + 1] = 0x45; // 'PE\0\0'
+    writeUInt16LE(exe, 0x8664, peOffset + 4);     // Machine: AMD64 (64-bit)
+    writeUInt16LE(exe, 2, peOffset + 6);          // Number of Sections: 2 (.text, .idata)
+    writeUInt32LE(exe, 0x60000000, peOffset + 8); // TimeDateStamp
+    writeUInt16LE(exe, 0xF0, peOffset + 20);      // Size of Optional Header (240 bajtów)
+    writeUInt16LE(exe, 0x0022, peOffset + 22);    // Characteristics: EXECUTABLE_IMAGE | LARGE_ADDRESS_AWARE
 
-  // --- 3. OPTIONAL HEADER (PE32+) ---
-  const optOffset = peOffset + 24;
-  writeUInt16LE(exe, 0x020B, optOffset);          // Magic: PE32+ (64-bit)
-  
-  writeUInt32LE(exe, 0x00000200, optOffset + 4);  // Size of Code
-  writeUInt32LE(exe, 0x00000200, optOffset + 8);  // Size of Initialized Data
-  
-  writeUInt32LE(exe, 0x00001000, optOffset + 16);  // Address of Entry Point (RVA)
-  writeUInt32LE(exe, 0x00001000, optOffset + 20);  // Base Of Code
-  
-  writeUInt32LE(exe, 0x00400000, optOffset + 24);  // ImageBase (0x00400000)
+    // --- 3. OPTIONAL HEADER (PE32+) ---
+    const optOffset = peOffset + 24;
+    writeUInt16LE(exe, 0x020B, optOffset);          // Magic: PE32+ (64-bit)
+    
+    writeUInt32LE(exe, 0x00000200, optOffset + 4);  // Size of Code
+    writeUInt32LE(exe, 0x00000200, optOffset + 8);  // Size of Initialized Data
+    
+    writeUInt32LE(exe, 0x00001000, optOffset + 16);  // Address of Entry Point (RVA)
+    writeUInt32LE(exe, 0x00001000, optOffset + 20);  // Base Of Code
+    
+    writeUInt32LE(exe, 0x00400000, optOffset + 24);  // ImageBase (0x00400000)
 
-  writeUInt32LE(exe, 0x00001000, optOffset + 32);  // Section Alignment (0x1000)
-  writeUInt32LE(exe, 0x00000200, optOffset + 36);  // File Alignment (0x200)
-  writeUInt16LE(exe, 6, optOffset + 40);          // Major OS Version
-  writeUInt16LE(exe, 0, optOffset + 42);          // Minor OS Version
-  writeUInt16LE(exe, 6, optOffset + 48);          // Major Subsystem Version
-  writeUInt16LE(exe, 0, optOffset + 50);          // Minor Subsystem Version
-  writeUInt32LE(exe, 0x00003000, optOffset + 56);  // Size of Image
-  writeUInt32LE(exe, 0x00000200, optOffset + 60);  // Size of Headers
-  writeUInt16LE(exe, 3, optOffset + 68);          // Subsystem: 3 = Windows CUI (Konsola)
-  
-  writeUInt32LE(exe, 0x00100000, optOffset + 72); // Stack Reserve
-  writeUInt32LE(exe, 0x00001000, optOffset + 80); // Stack Commit
-  writeUInt32LE(exe, 0x00100000, optOffset + 88); // Heap Reserve
-  writeUInt32LE(exe, 0x00001000, optOffset + 96); // Heap Commit
-  writeUInt32LE(exe, 16, optOffset + 108);        // Number of Data Directories
+    writeUInt32LE(exe, 0x00001000, optOffset + 32);  // Section Alignment (0x1000)
+    writeUInt32LE(exe, 0x00000200, optOffset + 36);  // File Alignment (0x200)
+    writeUInt16LE(exe, 6, optOffset + 40);          // Major OS Version
+    writeUInt16LE(exe, 0, optOffset + 42);          // Minor OS Version
+    writeUInt16LE(exe, 6, optOffset + 48);          // Major Subsystem Version
+    writeUInt16LE(exe, 0, optOffset + 50);          // Minor Subsystem Version
+    writeUInt32LE(exe, 0x00003000, optOffset + 56);  // Size of Image
+    writeUInt32LE(exe, 0x00000200, optOffset + 60);  // Size of Headers
+    writeUInt16LE(exe, 3, optOffset + 68);          // Subsystem: 3 = Windows CUI (Konsola)
+    
+    writeUInt32LE(exe, 0x00100000, optOffset + 72); // Stack Reserve
+    writeUInt32LE(exe, 0x00001000, optOffset + 80); // Stack Commit
+    writeUInt32LE(exe, 0x00100000, optOffset + 88); // Heap Reserve
+    writeUInt32LE(exe, 0x00001000, optOffset + 96); // Heap Commit
+    writeUInt32LE(exe, 16, optOffset + 108);        // Number of Data Directories
 
-  // Data Directory #1: Import Table (RVA 0x2020)
-  writeUInt32LE(exe, 0x00002020, optOffset + 120); 
-  writeUInt32LE(exe, 0x0000003C, optOffset + 124); 
+    // Data Directory #1: Import Table (RVA 0x2020)
+    writeUInt32LE(exe, 0x00002020, optOffset + 120); 
+    writeUInt32LE(exe, 0x0000003C, optOffset + 124); 
 
-  // Data Directory #12: IAT (RVA 0x2000)
-  writeUInt32LE(exe, 0x00002000, optOffset + 208); 
-  writeUInt32LE(exe, 0x00000020, optOffset + 212); 
+    // Data Directory #12: IAT (RVA 0x2000)
+    writeUInt32LE(exe, 0x00002000, optOffset + 208); 
+    writeUInt32LE(exe, 0x00000020, optOffset + 212); 
 
-  // --- 4. SECTION HEADERS ---
-  let secOffset = optOffset + 240;
+    // --- 4. SECTION HEADERS ---
+    let secOffset = optOffset + 240;
 
-  // Sekcja .text
-  exe.set(new TextEncoder().encode('.text\0\0\0'), secOffset);
-  writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
-  writeUInt32LE(exe, 0x00001000, secOffset + 12); // Virtual Address (RVA 0x1000)
-  writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
-  writeUInt32LE(exe, 0x00000200, secOffset + 20); // Pointer to Raw Data (0x200)
-  writeUInt32LE(exe, 0x60000020, secOffset + 36); // CODE | EXECUTE | READ
+    // Sekcja .text
+    exe.set(new TextEncoder().encode('.text\0\0\0'), secOffset);
+    writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
+    writeUInt32LE(exe, 0x00001000, secOffset + 12); // Virtual Address (RVA 0x1000)
+    writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
+    writeUInt32LE(exe, 0x00000200, secOffset + 20); // Pointer to Raw Data (0x200)
+    writeUInt32LE(exe, 0x60000020, secOffset + 36); // CODE | EXECUTE | READ
 
-  // Sekcja .idata
-  secOffset += 40;
-  exe.set(new TextEncoder().encode('.idata\0\0'), secOffset);
-  writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
-  writeUInt32LE(exe, 0x00002000, secOffset + 12); // Virtual Address (RVA 0x2000)
-  writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
-  writeUInt32LE(exe, 0x00000400, secOffset + 20); // Pointer to Raw Data (0x400)
-  writeUInt32LE(exe, 0xC0000040, secOffset + 36); // INITIALIZED_DATA | READ | WRITE
+    // Sekcja .idata
+    secOffset += 40;
+    exe.set(new TextEncoder().encode('.idata\0\0'), secOffset);
+    writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
+    writeUInt32LE(exe, 0x00002000, secOffset + 12); // Virtual Address (RVA 0x2000)
+    writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
+    writeUInt32LE(exe, 0x00000400, secOffset + 20); // Pointer to Raw Data (0x400)
+    writeUInt32LE(exe, 0xC0000040, secOffset + 36); // INITIALIZED_DATA | READ | WRITE
 
+    return exe
+  }
 
 
 
@@ -415,6 +418,9 @@ export function generateExecutable(outputPath) {
   writeUInt32LE(code, offsetToExit, 0x1B);
 */
   // Zapisanie gotowego kodu do pliku
+
+  const exe = writePEHeader()
+
   exe.set(code, 0x200);
 
 
