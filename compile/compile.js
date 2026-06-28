@@ -274,7 +274,7 @@ export function generateExecutable(outputPath) {
 
   //console.log(importEntries)
 
-  let code = `sub rsp, 40
+  let code = fs.readFileSync('./source/test.asm').toString()/*`sub rsp, 40
     and rsp, -16
 
     lea rax, [hello]
@@ -286,7 +286,7 @@ export function generateExecutable(outputPath) {
     xor ecx, ecx
     
     call [ExitProcess]
-  `
+  `*/
   let lines = code.split('\n').map(line=>{
     if(line.length){
       return getHex(line)
