@@ -406,4 +406,5 @@ export function generateExecutable(outputPath) {
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
 }
 
-generateExecutable('./out/test.exe');
+const fileName = process.argv[2]
+generateExecutable('./out/'+fileName+'.exe');
