@@ -1,7 +1,7 @@
 sub rsp, 40
 and rsp, -16
 
-lea rax, [hello]
+lea rax, [test]
 mov rcx, rax
 xor eax, eax
 

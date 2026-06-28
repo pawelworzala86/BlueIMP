@@ -121,8 +121,10 @@ export function generateExecutable(outputPath) {
 
   const ADDR = {}
 
-
-
+  const DATA = [
+    {name:'hello',kind:'db',value:'Hello World!\n\0'},
+    {name:'test',kind:'db',value:'test!\n\0'},
+  ]
 
 
 
@@ -131,8 +133,13 @@ export function generateExecutable(outputPath) {
   const RVA_TEXT_START = 0x1000;
   const RVA_STRING_HELLO = 0x20C0;
 
-  ADDR.hello = RVA_STRING_HELLO
-
+  let dataOffset = 0
+  for(const DTA of DATA){
+    ADDR[DTA.name] = RVA_STRING_HELLO+dataOffset
+    dataOffset += DTA.value.length
+  }
+  //ADDR.hello = RVA_STRING_HELLO
+  //ADDR.test = RVA_STRING_HELLO+'Hello World!\n\0'.length
 
 
 
@@ -412,7 +419,13 @@ export function generateExecutable(outputPath) {
   }
 
   // Tekst przekazywany do printf (0x0A to nowa linia \n)
-  exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);
+  //exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);
+  //exe.set(enc.encode('test!\n\0'), idataRaw + 0xC0+'Hello World!\n\0'.length);
+  dataOffset = 0
+  for(const DTA of DATA){
+    exe.set(enc.encode(DTA.value), idataRaw + 0xC0 + dataOffset);
+    dataOffset += DTA.value.length
+  }
 
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
