@@ -31,6 +31,16 @@ for (const file of files) {
 
 
 
+const fileName = process.argv[2]
+
+
+
+
+
+
+
+
+
 function writeUInt32LE(array, value, offset) {
   array[offset] = value & 0xff;
   array[offset + 1] = (value >> 8) & 0xff;
@@ -119,12 +129,54 @@ export function generateExecutable(outputPath) {
 
 
 
+
+
+
+
+  const sourceCode = fs.readFileSync('./source/'+fileName+'.asm').toString()
+  const SECTIONS = {
+    code:'',
+    data:'',
+    import:'',
+  }
+  let activeSection = 'TEXT'
+  let codeLines = sourceCode.split('\n')
+  codeLines.map(line=>{
+    if(line.trim()=='.code'){
+      activeSection = 'code'
+    }else if(line.trim()=='.data'){
+      activeSection = 'data'
+    }else if(line.trim()=='.import'){
+      activeSection = 'import'
+    }else{
+      SECTIONS[activeSection]+=line+'\n'
+    }
+  })
+
+
+
+
+
+
+
   const ADDR = {}
 
-  const DATA = [
-    {name:'hello',kind:'db',value:'Hello World!\n\0'},
-    {name:'test',kind:'db',value:'test!\n\0'},
-  ]
+  const DATA = []
+  //  {name:'hello',kind:'db',value:'Hello World!\n\0'},
+  //  {name:'test',kind:'db',value:'test!\n\0'},
+  //]
+
+  SECTIONS.data.split('\n').map(line=>{
+    if(line.trim().length){
+      const parts = line.trim().split(' ')
+      DATA.push({
+        name: parts[0],
+        kind: parts[1],
+        value: parts[2].replace(',0','').replace(/\'/gm,'')+'\0',
+      })
+    }
+  })
+
 
 
 
@@ -281,7 +333,8 @@ export function generateExecutable(outputPath) {
 
   //console.log(importEntries)
 
-  let code = fs.readFileSync('./source/test.asm').toString()/*`sub rsp, 40
+  let code = SECTIONS.code
+  /*fs.readFileSync('./source/test.asm').toString()/*`sub rsp, 40
     and rsp, -16
 
     lea rax, [hello]
@@ -430,6 +483,4 @@ export function generateExecutable(outputPath) {
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
 }
-
-const fileName = process.argv[2]
 generateExecutable('./out/'+fileName+'.exe');

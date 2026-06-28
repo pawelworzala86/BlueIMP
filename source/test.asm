@@ -1,12 +1,16 @@
-sub rsp, 40
-and rsp, -16
+.code
+    sub rsp, 40
+    and rsp, -16
 
-lea rax, [test]
-mov rcx, rax
-xor eax, eax
+    lea rax, [test]
+    mov rcx, rax
+    xor eax, eax
 
-call [printf]
+    call [printf]
 
-xor ecx, ecx
+    xor ecx, ecx
 
-call [ExitProcess]
+    call [ExitProcess]
+
+.data
+    test db 'test!',0
