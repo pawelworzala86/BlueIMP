@@ -1,6 +1,6 @@
 del out\%1.exe
 
-node compile %1
+node compile\compile.js %1
 
 cd out
 .\%1.exe
