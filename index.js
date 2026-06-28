@@ -90,9 +90,14 @@ export function generatePrintfExecutable(outputPath) {
   const RVA_TEXT_START = 0x1000;
   const RVA_STRING_HELLO = 0x20C0;
 
+
+
+
+
+
   const IAT = [
     { dll: 'kernel32.dll', functions: [{ name: 'ExitProcess' }] },
-    { dll: 'msvcrt.dll', functions: [{ name: 'printf' }] },
+    { dll: 'msvcrt.dll', functions: [{ name: 'printf' },{ name: 'malloc' }] },
   ];
 
   const importEntries = [];
@@ -120,6 +125,11 @@ export function generatePrintfExecutable(outputPath) {
 
   const RVA_IAT_EXIT_PROCESS = importByName.ExitProcess.iatRva;
   const RVA_IAT_PRINTF = importByName.printf.iatRva;
+
+
+
+  //console.log(importEntries)
+
 
   // Szkielet instrukcji assemblera
   const code = new Uint8Array([
