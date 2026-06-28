@@ -464,12 +464,30 @@ export function generateExecutable(outputPath) {
   // Zapisanie gotowego kodu do pliku
 
 
+  
 
-  const idataRaw = 1024+512
 
-  const exe = writePEHeader(2048,
-    1024,512,
-    512,1024+512,
+  dataOffset = 0
+  for(const DTA of DATA){
+    //exe.set(enc.encode(DTA.value), idataRaw + 0xC0 + dataOffset);
+    dataOffset += DTA.value.length
+  }
+  console.log(0xC0 + dataOffset)
+  const iatSize = Math.ceil((0xC0 + dataOffset)/512)*512
+  console.log('iatSize', iatSize)
+
+
+
+  const codeSize = Math.ceil(code.length/512)*512
+  console.log(codeSize)
+
+
+
+  let idataRaw = codeSize+512
+
+  const exe = writePEHeader(512+codeSize+iatSize,
+    codeSize,512,
+    iatSize,idataRaw,
   )
 
   exe.set(code, 0x200);
@@ -493,6 +511,7 @@ export function generateExecutable(outputPath) {
 
   // --- 6. SEKCJA IMPORTÓW .idata (Raw = 0x400, RVA = 0x2000) ---
   //const idataRaw = 0x600;
+  //idataRaw = 0
 
   for (const entry of importEntries) {
     writeUInt32LE(exe, entry.hintNameRva, idataRaw + (entry.iatRva - 0x2000));
@@ -536,6 +555,10 @@ export function generateExecutable(outputPath) {
     exe.set(enc.encode(DTA.value), idataRaw + 0xC0 + dataOffset);
     dataOffset += DTA.value.length
   }
+
+  console.log(0xC0 + dataOffset)
+
+
 
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
