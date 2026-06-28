@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import { getSubInstruction } from './instructions/sub.js'
+/*import { getSubInstruction } from './instructions/sub.js'
 import { getAndInstruction } from './instructions/and.js'
 import { getLeaInstruction } from './instructions/lea.js'
 import { getXorInstruction } from './instructions/xor.js'
@@ -15,6 +15,18 @@ const INSTR = {
   'xor': getXorInstruction,
   'call': getCallInstruction,
   'mov': getMovInstruction,
+}*/
+export const INSTR = {};
+
+const files = fs.readdirSync('./compile/instructions/').filter(f => f.endsWith('.js'));
+for (const file of files) {
+  const mnemonic = file.replace('.js', '');
+  const modulePath = './instructions/' + file
+  const mod = await import(modulePath)
+  const fn = Object.values(mod).find(v => typeof v === 'function')
+  if(fn){
+    INSTR[mnemonic] = fn
+  }
 }
 
 
@@ -183,7 +195,7 @@ export function generateExecutable(outputPath) {
         dataName = params[2].replace(/\[|\]/gm,'')
         params[2] = '[0x00000000]'
       }
-      result = getLeaInstruction(params)//'48 8D 0D 00 00 00 00'
+      result = INSTR['lea'](params)//'48 8D 0D 00 00 00 00'
       REPL.push({
         name: dataName,//'hello',
         offset: OFFSET,
@@ -201,7 +213,7 @@ export function generateExecutable(outputPath) {
         dataName = params[1].replace(/\[|\]/gm,'')
         params[1] = '[0x00000000]'
       }
-      result = getCallInstruction(params)
+      result = INSTR['call'](params)
       REPL.push({
         name: dataName,//'printf',
         offset: OFFSET,
@@ -227,7 +239,7 @@ export function generateExecutable(outputPath) {
       if(params[1].indexOf('[')>-1){
         dataName = params[1].replace(/\[|\]/gm,'')
         params[1] = '[0x00000000]'
-        result = getCallInstruction(params)
+        result = INSTR['mov'](params)
         REPL.push({
           name: dataName,//'printf',
           offset: OFFSET,
@@ -237,7 +249,7 @@ export function generateExecutable(outputPath) {
       }else if(params[2].indexOf('[')>-1){
         dataName = params[2].replace(/\[|\]/gm,'')
         params[2] = '[0x00000000]'
-        result = getCallInstruction(params)
+        result = INSTR['mov'](params)
         REPL.push({
           name: dataName,//'printf',
           offset: OFFSET,
@@ -245,7 +257,7 @@ export function generateExecutable(outputPath) {
           addr: OFFSET+3,
         })
       }else{
-        result = getMovInstruction(params)
+        result = INSTR['mov'](params)
       }
     }
 
