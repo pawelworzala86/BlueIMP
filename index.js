@@ -3,12 +3,16 @@ import fs from 'fs';
 import { getSubInstruction } from './instructions/sub.js'
 import { getAndInstruction } from './instructions/and.js'
 import { getLeaInstruction } from './instructions/lea.js'
+import { getXorInstruction } from './instructions/xor.js'
+import { getCallInstruction } from './instructions/call.js'
 
 
 const INSTR = {
   'sub': getSubInstruction,
   'and': getAndInstruction,
   'lea': getLeaInstruction,
+  'xor': getXorInstruction,
+  'call': getCallInstruction,
 }
 
 
@@ -185,22 +189,28 @@ export function generatePrintfExecutable(outputPath) {
         addr: OFFSET+3,
       })
     }
-    if(asm=='xor eax, eax'){
-      result = '31 C0'
-    }
-    if(asm=='call [printf]'){
-      result = 'FF 15 00 00 00 00'
+    //if(asm=='xor eax, eax'){
+    //  result = '31 C0'
+    //}
+    if(ins=='call'){//if(asm=='call [printf]'){
+      //result = 'FF 15 00 00 00 00'
+      let dataName = ''
+      if(params[1].indexOf('[')>-1){
+        dataName = params[1].replace(/\[|\]/gm,'')
+        params[1] = '[0x00000000]'
+      }
+      result = getCallInstruction(params)
       REPL.push({
-        name: 'printf',
+        name: dataName,//'printf',
         offset: OFFSET,
         length: result.replace(/\ /gm,'').length/2,
         addr: OFFSET+2,
       })
     }
-    if(asm=='xor ecx, ecx'){
-      result = '31 C9'
-    }
-    if(asm=='call [ExitProcess]'){
+    //if(asm=='xor ecx, ecx'){
+    //  result = '31 C9'
+    //}
+    /*if(asm=='call [ExitProcess]'){
       result = 'FF 15 00 00 00 00'
       REPL.push({
         name: 'ExitProcess',
@@ -208,7 +218,7 @@ export function generatePrintfExecutable(outputPath) {
         length: result.replace(/\ /gm,'').length/2,
         addr: OFFSET+2,
       })
-    }
+    }*/
 
     
 
