@@ -1,0 +1,1 @@
+bh test\test.asm test\test.exe
