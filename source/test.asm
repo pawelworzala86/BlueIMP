@@ -1,23 +1,23 @@
 .code
-    sub rsp, 40
-    and rsp, -16
+    lea rcx, [test]
+    mov rdx, [num]
+    call [printf]
 
     call [start]
 
-    lea rcx, [test]
-    mov rdx, [num]
-    xor eax, eax
+    lea rcx, [testT]
+    call [printf]
+
+    lea rcx, [testT]
     call [printf]
 
     xor ecx, ecx
-
     call [ExitProcess]
 
 start:
     lea rcx, [testT]
-    xor eax, eax
     call [printf]
-ret
+    ret
 
 .data
     testT db 'start',0

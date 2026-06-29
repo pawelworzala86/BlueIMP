@@ -40,6 +40,19 @@ const fileName = process.argv[2]
 
 
 
+function writeUInt64LE(array, value, offset) {
+  // value może być BigInt lub Number — wymuszamy BigInt
+  value = BigInt(value);
+
+  array[offset]     = Number(value & 0xFFn);
+  array[offset + 1] = Number((value >> 8n) & 0xFFn);
+  array[offset + 2] = Number((value >> 16n) & 0xFFn);
+  array[offset + 3] = Number((value >> 24n) & 0xFFn);
+  array[offset + 4] = Number((value >> 32n) & 0xFFn);
+  array[offset + 5] = Number((value >> 40n) & 0xFFn);
+  array[offset + 6] = Number((value >> 48n) & 0xFFn);
+  array[offset + 7] = Number((value >> 56n) & 0xFFn);
+}
 
 function writeUInt32LE(array, value, offset) {
   array[offset] = value & 0xff;
@@ -370,13 +383,13 @@ export function generateExecutable(outputPath) {
           local: true,
         })
       }else{
-        //result = 'FF 15 00 00 00 00'
+        result = 'FF 15 00 00 00 00'
         let dataName = ''
         if(params[1].indexOf('[')>-1){
           dataName = params[1].replace(/\[|\]/gm,'')
-          params[1] = '[0x00000000]'
+          //params[1] = '[0x00000000]'
         }
-        result = INSTR['call'](params)
+        //result = INSTR['call'](params)
         REPL.push({
           name: dataName,//'printf',
           offset: OFFSET,
@@ -424,12 +437,16 @@ export function generateExecutable(outputPath) {
         result = INSTR['mov'](params)
       }
     }
+    if(ins=='ret'){
+      result = 'C3'
+      OFFSET++
+      return result
+    }
 
     if(ins[ins.length-1]==':'){
       const name = ins.trim().replace(':','')
-      //console.log('ETYKIETA')
-      //process.exit()
       FUNCS[name] = OFFSET
+      return ''
     }
     
 
@@ -470,8 +487,9 @@ export function generateExecutable(outputPath) {
     return line
   })
   code = lines.join('\n')
+  console.log(code)
   code = code.replace(/\n|\ /gm,'')
-  //console.log(code)
+  
 
   function hexToU8(hex) {
     const arr = new Uint8Array(hex.length / 2);
@@ -508,8 +526,8 @@ export function generateExecutable(outputPath) {
 
   for(const RP of REPL){
     if(RP.local){
-      const localOffset = FUNCS[RP.name] - RP.offset + 5
-      console.log(localOffset)
+      const localOffset = FUNCS[RP.name] - RP.offset - 5
+      console.log('localOffset',localOffset)
       //process.exit()
       writeInt32LE(code, localOffset, RP.addr)
     }else{
@@ -518,6 +536,14 @@ export function generateExecutable(outputPath) {
       writeUInt32LE(code, offsetToUse, RP.addr)
     }
   }
+
+  function toHexString(bytes) {
+    return Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join(' ');
+  }
+  const hex = toHexString(code);
+  fs.writeFileSync('./hex.txt',hex)
 
   // --- DYNAMICZNE OBLICZANIE OFFSETÓW RIP-RELATIVE ---
   
@@ -647,6 +673,9 @@ export function generateExecutable(outputPath) {
   console.log(0xC0 + dataOffset)
 
 
+
+  const hex2 = toHexString(exe);
+  fs.writeFileSync('./exe.txt',hex2)
 
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
