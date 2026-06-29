@@ -3,7 +3,8 @@
     mov rdx, [num]
     call [printf]
 
-    call [start]
+    call [startA]
+start:
 
     lea rcx, [testT]
     call [printf]
@@ -14,7 +15,7 @@
     xor ecx, ecx
     call [ExitProcess]
 
-start:
+startA:
     lea rcx, [testT]
     call [printf]
     ret
