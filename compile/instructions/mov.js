@@ -27,7 +27,6 @@ export function getMovInstruction(parts) {
     bytes.push("48"); // REX.W
     bytes.push("89"); // MOV r/m64, r64
 
-    // ModR/M: mod=11 (reg-reg), reg=src, rm=dst
     const modrm = 0xC0 | (srcId << 3) | dstId;
     bytes.push(modrm.toString(16).padStart(2, "0"));
 
@@ -37,20 +36,18 @@ export function getMovInstruction(parts) {
   // ============================================================
   // CASE 2: mov r64, [disp32]
   // ============================================================
-  if (isRegDst && src.startsWith("[") && src.endsWith("]")) {
+  if (isRegDst && src.startsWith("[") && src.endsWith("]") && !src.includes("+")) {
     const dstId = REG_MAP[dst];
     let addr = src.slice(1, -1);
 
     addr = addr.startsWith("0x") ? parseInt(addr, 16) : Number(addr);
 
-    bytes.push("48"); // REX.W
-    bytes.push("8B"); // MOV r64, r/m64
+    bytes.push("48");
+    bytes.push("8B");
 
-    // ModR/M: reg = dstId, rm = 5 (disp32)
     const modrm = (dstId << 3) | 5;
     bytes.push(modrm.toString(16).padStart(2, "0"));
 
-    // disp32
     bytes.push(
       (addr & 0xFF).toString(16).padStart(2, "0"),
       ((addr >> 8) & 0xFF).toString(16).padStart(2, "0"),
@@ -64,26 +61,100 @@ export function getMovInstruction(parts) {
   // ============================================================
   // CASE 3: mov [disp32], r64
   // ============================================================
-  if (dst.startsWith("[") && dst.endsWith("]") && isRegSrc) {
+  if (dst.startsWith("[") && dst.endsWith("]") && !dst.includes("+") && isRegSrc) {
     const srcId = REG_MAP[src];
     let addr = dst.slice(1, -1);
 
     addr = addr.startsWith("0x") ? parseInt(addr, 16) : Number(addr);
 
-    bytes.push("48"); // REX.W
-    bytes.push("89"); // MOV r/m64, r64
+    bytes.push("48");
+    bytes.push("89");
 
-    // ModR/M: reg = srcId, rm = 5 (disp32)
     const modrm = (srcId << 3) | 5;
     bytes.push(modrm.toString(16).padStart(2, "0"));
 
-    // disp32
     bytes.push(
       (addr & 0xFF).toString(16).padStart(2, "0"),
       ((addr >> 8) & 0xFF).toString(16).padStart(2, "0"),
       ((addr >> 16) & 0xFF).toString(16).padStart(2, "0"),
       ((addr >> 24) & 0xFF).toString(16).padStart(2, "0")
     );
+
+    return bytes.join(" ").toUpperCase();
+  }
+
+  // ============================================================
+  // CASE X: mov r64, [reg + disp]
+  // ============================================================
+  if (isRegDst && src.startsWith("[") && src.endsWith("]") && src.includes("+")) {
+    const dstId = REG_MAP[dst];
+
+    let inside = src.slice(1, -1);
+    let [baseReg, dispStr] = inside.split("+");
+
+    const baseId = REG_MAP[baseReg];
+    if (baseId === undefined) return null;
+
+    let disp = dispStr.startsWith("0x") ? parseInt(dispStr, 16) : Number(dispStr);
+
+    bytes.push("48");
+    bytes.push("8B");
+
+    let mod = (disp >= -128 && disp <= 127) ? 0x40 : 0x80;
+    const modrm = mod | (dstId << 3) | 4;
+    bytes.push(modrm.toString(16).padStart(2, "0"));
+
+    const sib = (0 << 6) | (4 << 3) | baseId;
+    bytes.push(sib.toString(16).padStart(2, "0"));
+
+    if (mod === 0x40) {
+      bytes.push((disp & 0xFF).toString(16).padStart(2, "0"));
+    } else {
+      bytes.push(
+        (disp & 0xFF).toString(16).padStart(2, "0"),
+        ((disp >> 8) & 0xFF).toString(16).padStart(2, "0"),
+        ((disp >> 16) & 0xFF).toString(16).padStart(2, "0"),
+        ((disp >> 24) & 0xFF).toString(16).padStart(2, "0")
+      );
+    }
+
+    return bytes.join(" ").toUpperCase();
+  }
+
+  // ============================================================
+  // CASE Y: mov [reg + disp], r64
+  // ============================================================
+  if (dst.startsWith("[") && dst.endsWith("]") && dst.includes("+") && isRegSrc) {
+    const srcId = REG_MAP[src];
+
+    let inside = dst.slice(1, -1);
+    let [baseReg, dispStr] = inside.split("+");
+
+    const baseId = REG_MAP[baseReg];
+    if (baseId === undefined) return null;
+
+    let disp = dispStr.startsWith("0x") ? parseInt(dispStr, 16) : Number(dispStr);
+
+    bytes.push("48");
+    bytes.push("89");
+
+    let mod = (disp >= -128 && disp <= 127) ? 0x40 : 0x80;
+    const modrm = mod | (srcId << 3) | 4;
+    bytes.push(modrm.toString(16).padStart(2, "0"));
+
+    const sib = (0 << 6) | (4 << 3) | baseId;
+    bytes.push(sib.toString(16).padStart(2, "0"));
+
+    if (mod === 0x40) {
+      bytes.push((disp & 0xFF).toString(16).padStart(2, "0"));
+    } else {
+      bytes.push(
+        (disp & 0xFF).toString(16).padStart(2, "0"),
+        ((disp >> 8) & 0xFF).toString(16).padStart(2, "0"),
+        ((disp >> 16) & 0xFF).toString(16).padStart(2, "0"),
+        ((disp >> 24) & 0xFF).toString(16).padStart(2, "0")
+      );
+    }
 
     return bytes.join(" ").toUpperCase();
   }
@@ -114,3 +185,5 @@ export function getMovInstruction(parts) {
 console.log(getMovInstruction(['mov','rcx','rax']));
 console.log(getMovInstruction(['mov','rcx','[0x00000000]']));
 console.log(getMovInstruction(['mov','[0x00000000]','rcx']));
+console.log(getMovInstruction(['mov','rcx','[rax+16]']));
+console.log(getMovInstruction(['mov','[rax+16]','rax']));

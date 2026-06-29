@@ -42,8 +42,9 @@ export function Prepare(code){
     const REGS = ['rcx','rdx']
 
     code = code.replace(/invoke .*/gm,match=>{
-        let name = match.split(' ')[1].replace(',','').trim()
-        let params = match.replace('invoke '+name+', ','').split(',').map(t=>t.trim())
+        let name = match.split(' ')[1].trim()
+        let params = match.replace('invoke '+name+'','').split(',').map(t=>t.trim()).filter(p=>p.length)
+        name = name.replace(',','').trim()
         let reg = 0
         params = params.map((param,i)=>{
             if(i<4){
@@ -61,7 +62,74 @@ export function Prepare(code){
     add rsp, 40`
     })
 
-    //fs.writeFileSync('./prepared.asm', code)
+    code = code.replace(/rvcall .*/gm,match=>{
+        let name = match.split(' ')[1].trim()
+        let params = match.replace('rvcall '+name+'','').split(',').map(t=>t.trim()).filter(p=>p.length)
+        name = name.replace(',','').trim()
+        let reg = 0
+        params = params.map((param,i)=>{
+            if(param.indexOf('addr')>-1){
+                return `lea rax, [${param.replace('addr','').trim()}]\npush rax`
+            }
+            return `push [${param}]`
+        })
+        return `    ${params.join('\n')}
+    call [${name}]
+    add rsp, ${params.length*8}`
+    })
+
+    const PROCS = []
+
+    code = code.replace(/proc([\s\S]+?)endp/gm,match=>{
+        let name = match.split(' ')[1].trim()
+        let lines = match.split('\n')
+        let params = lines[0].replace('proc '+name,'').trim().split('\n')[0].split(',').map(t=>t.trim()).filter(p=>p.length)
+        match = match.replace(/^proc (.*)/gm,'')
+        match = match.replace(/^endp/gm,'')
+        match = match.trim()
+
+        params.map((param,i)=>{
+            match = match.replace(new RegExp('\\b'+param+'\\b','gm'),match=>{
+                return `[rbp + ${(i+1)*8}]`
+            })
+        })
+
+        PROCS.push({name,params,body:match})
+        return `${name}:
+    push rbp
+    mov rbp, rsp
+    sub rsp, ${params.length*8}
+
+    ${match}
+
+    add rsp, ${params.length*8}
+    mov rsp, rbp
+    pop rbp
+
+    ret`
+    })
+
+    console.log(PROCS)
+
+    /*for(let PR of PROCS){
+        code = code.replace(new RegExp('\\b'+PR.name+'\\b(.*)','gm'),match=>{
+            const name = match.split(' ')[0].trim()
+            const params = match.replace(name+' ','').split(',').map(t=>t.trim())
+            console.log(name,params)
+            let result = PR.body
+            params.map((param,i)=>{
+                //result = result.replace(new RegExp('\\b'+PR.params[i]+'\\b','gm'),param)
+            })
+            return result
+        })
+    }*/
+
+    code = code.replace(/\[\[/gm,'[')
+    code = code.replace(/\]\]/gm,']')
+
+    fs.writeFileSync('./prepared.asm', code)
+
+    //process.exit()
 
     return code
 }
