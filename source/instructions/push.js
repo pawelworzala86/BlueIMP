@@ -1,4 +1,4 @@
-export function getPushInstruction(parts) {
+function getPushInstruction(parts) {
   // parts = ['push','rax'] OR ['push','0x10'] OR ['push','[0x00000000]']
   const mnemonic = parts[0];
   const arg = parts[1];
@@ -90,3 +90,5 @@ console.log(getPushInstruction(['push','0x12345678']));
 
 console.log(getPushInstruction(['push','[0x00000000]']));
 // FF 35 00 00 00 00
+
+module.exports = getPushInstruction

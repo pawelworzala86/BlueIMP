@@ -1,4 +1,4 @@
-export function getCallInstruction(parts) {
+function getCallInstruction(parts) {
   const mnemonic = parts[0];
   let arg = parts[1];
 
@@ -31,3 +31,5 @@ export function getCallInstruction(parts) {
 }
 
 console.log(getCallInstruction(['call','[0x00000000]']));
+
+module.exports = getCallInstruction

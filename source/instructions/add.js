@@ -1,4 +1,4 @@
-export function getAddInstruction(parts) {
+function getAddInstruction(parts) {
   // parts = ['add','rax','0x28']  OR  ['add','rsp','[0x00000000]']
 
   const mnemonic = parts[0];
@@ -80,3 +80,5 @@ export function getAddInstruction(parts) {
 
 console.log(getAddInstruction(['add','rsp','40']));
 console.log(getAddInstruction(['add','rax','[0x00000000]']));
+
+module.exports = getAddInstruction

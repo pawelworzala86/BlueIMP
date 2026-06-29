@@ -1,17 +1,20 @@
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath, pathToFileURL } from 'url'
-import { Prepare } from './prepare.js'
+const fs = require('fs')
+const path = require('path')
+//const { fileURLToPath, pathToFileURL } from 'url'
+const Prepare = require('./prepare.js')
 
-const __filename = fileURLToPath(import.meta.url).replace('compile\\compile.js','');
+//const __filename = fileURLToPath(import.meta.url).replace('compile\\compile.js','');
 //console.log(__filename);
 
-/*import { getSubInstruction } from './instructions/sub.js'
-import { getAndInstruction } from './instructions/and.js'
-import { getLeaInstruction } from './instructions/lea.js'
-import { getXorInstruction } from './instructions/xor.js'
-import { getCallInstruction } from './instructions/call.js'
-import { getMovInstruction } from './instructions/mov.js'
+const getSubInstruction = require('./instructions/sub.js')
+const getAndInstruction = require('./instructions/and.js')
+const getLeaInstruction = require('./instructions/lea.js')
+const getXorInstruction = require('./instructions/xor.js')
+const getCallInstruction = require('./instructions/call.js')
+const getMovInstruction = require('./instructions/mov.js')
+const getAddInstruction = require('./instructions/add.js')
+const getPopInstruction = require('./instructions/pop.js')
+const getPushInstruction = require('./instructions/push.js')
 
 
 const INSTR = {
@@ -21,8 +24,11 @@ const INSTR = {
   'xor': getXorInstruction,
   'call': getCallInstruction,
   'mov': getMovInstruction,
-}*/
-export const INSTR = {};
+  'add': getAddInstruction,
+  'pop': getPopInstruction,
+  'push': getPushInstruction,
+}
+/*export const INSTR = {};
 
 const files = fs.readdirSync(path.resolve(__filename,'./compile/instructions/')).filter(f => f.endsWith('.js'));
 for (const file of files) {
@@ -36,7 +42,7 @@ for (const file of files) {
   if(fn){
     INSTR[mnemonic] = fn
   }
-}
+}*/
 
 
 
@@ -84,7 +90,7 @@ function writeUInt16LE(array, value, offset) {
   array[offset + 1] = (value >> 8) & 0xff;
 }
 
-export function generateExecutable(outputPath) {
+function generateExecutable(outputPath) {
   function writePEHeader(fileSize,textSize,textPointer,idataSize,idataPointer){
     //const fileSize = 0x800; 
     const exe = new Uint8Array(fileSize);

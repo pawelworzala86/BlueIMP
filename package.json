@@ -1,0 +1,39 @@
+{
+  "name": "black-hole",
+  "version": "0.0.2",
+  "bin": {
+    "black-hole": "source/compile.js"
+  },
+  "type": "commonjs",
+  "pkg": {
+    "scripts": [
+      "source/**/*.js"
+    ],
+    "assets": [
+      "source/**/*.js"
+    ],
+    "noBytecode": true,
+    "targets": [
+      "node18-win-x64"
+    ]
+  },
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "build": "pkg . --options experimental-modules --output bin/bh.exe"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pawelworzala86/BlackHole.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pawelworzala86/BlackHole/issues"
+  },
+  "homepage": "https://github.com/pawelworzala86/BlackHole#readme"
+}

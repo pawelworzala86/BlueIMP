@@ -1,1 +1,1 @@
-bh test\test.asm test\test.exe
+bh.exe test\test.asm test\test.exe

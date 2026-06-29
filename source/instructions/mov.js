@@ -1,4 +1,4 @@
-export function getMovInstruction(parts) {
+function getMovInstruction(parts) {
   const mnemonic = parts[0];
   const dst = parts[1];
   let src = parts[2];
@@ -187,3 +187,5 @@ console.log(getMovInstruction(['mov','rcx','[0x00000000]']));
 console.log(getMovInstruction(['mov','[0x00000000]','rcx']));
 console.log(getMovInstruction(['mov','rcx','[rax+16]']));
 console.log(getMovInstruction(['mov','[rax+16]','rax']));
+
+module.exports = getMovInstruction

@@ -1,4 +1,4 @@
-export function getSubInstruction(parts) {
+function getSubInstruction(parts) {
   // parts = ['sub','rsp','0x28']  OR  ['sub','rsp','[0x00000000]']
 
   const mnemonic = parts[0];
@@ -80,3 +80,5 @@ export function getSubInstruction(parts) {
 
 console.log(getSubInstruction(['sub','rsp','40']))//return '48 83 EC 28'
 console.log(getSubInstruction(['sub','rsp','[0x00000000]']))
+
+module.exports = getSubInstruction

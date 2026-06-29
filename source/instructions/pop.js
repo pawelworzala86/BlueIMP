@@ -1,4 +1,4 @@
-export function getPopInstruction(parts) {
+function getPopInstruction(parts) {
   // parts = ['pop','rax'] OR ['pop','[0x00000000]']
   const mnemonic = parts[0];
   const reg = parts[1];
@@ -57,3 +57,5 @@ console.log(getPopInstruction(['pop','rdi']));
 // 5F
 console.log(getPopInstruction(['pop','[0x00000000]']));
 // 8F 05 00 00 00 00
+
+module.exports = getPopInstruction

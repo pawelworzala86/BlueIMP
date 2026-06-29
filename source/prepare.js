@@ -1,7 +1,7 @@
-import fs from 'fs'
-import path from 'path'
+const fs = require('fs')
+const path = require('path')
 
-export function Prepare(code){
+function Prepare(code){
 
     code = code.replace(/include .*/gm,match=>{
         let file = match.split('\'')[1].trim()
@@ -140,3 +140,5 @@ export function Prepare(code){
 
     return code
 }
+
+module.exports = Prepare

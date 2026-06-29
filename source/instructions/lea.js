@@ -1,4 +1,4 @@
-export function getLeaInstruction(parts) {
+function getLeaInstruction(parts) {
   const mnemonic = parts[0];
   const reg = parts[1];
   let arg = parts[2];
@@ -48,3 +48,5 @@ export function getLeaInstruction(parts) {
 }
 
 console.log(getLeaInstruction(['lea','rcx','[0x00000000]']));
+
+module.exports = getLeaInstruction

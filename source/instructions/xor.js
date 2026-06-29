@@ -1,4 +1,4 @@
-export function getXorInstruction(parts) {
+function getXorInstruction(parts) {
   const mnemonic = parts[0];
   const dst = parts[1];
   const src = parts[2];
@@ -39,3 +39,5 @@ export function getXorInstruction(parts) {
 
 console.log(getXorInstruction(['xor','eax','eax']));
 console.log(getXorInstruction(['xor','rax','rax']));
+
+module.exports = getXorInstruction

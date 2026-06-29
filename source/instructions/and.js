@@ -1,4 +1,4 @@
-export function getAndInstruction(parts) {
+function getAndInstruction(parts) {
   const mnemonic = parts[0];
   const reg = parts[1];
   let arg = parts[2];
@@ -80,3 +80,5 @@ export function getAndInstruction(parts) {
 
 console.log(getAndInstruction(['and','rsp','-16']))
 console.log(getAndInstruction(['and','rsp','[0x00000000]']))
+
+module.exports = getAndInstruction
