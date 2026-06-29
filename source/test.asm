@@ -8,10 +8,10 @@ end macro
 
     invoke printf, addr test, num
 
-    ;rvcall testProc, addr testT
-    lea rax, [testT]
-    push rax
-    call [testProc]
+    rvcall testProc, addr testT
+    ;lea rax, [testT]
+    ;push rax
+    ;call [testProc]
     ;add rsp, 16
 
 
@@ -34,26 +34,26 @@ startA:
 
     ret
 
-;proc testProc paramA
-;    invoke printf, paramA
-;endp
-testProc:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 8
-
-    ;lea rcx, [testT]
-    ;mov rax, [rcx+0];  [rbp+16]
-    sub rsp, 40
-    mov rcx, [rbp+16]
-    call [printf]
-    add rsp, 40
-
-    add rsp, 8
-    mov rsp, rbp
-    pop rbp
-
-    ret
+proc testProc paramA
+    invoke printf, paramA
+endp
+;testProc:
+;    push rbp
+;    mov rbp, rsp
+;    sub rsp, 8
+;
+;    ;lea rcx, [testT]
+;    ;mov rax, [rcx+0];  [rbp+16]
+;    sub rsp, 40
+;    mov rcx, [rbp+16]
+;    call [printf]
+;    add rsp, 40
+;
+;    add rsp, 8
+;    mov rsp, rbp
+;    pop rbp
+;
+;    ret
 
 .data
     testT db 'start',0

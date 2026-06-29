@@ -90,7 +90,7 @@ export function Prepare(code){
 
         params.map((param,i)=>{
             match = match.replace(new RegExp('\\b'+param+'\\b','gm'),match=>{
-                return `[rbp + ${(i+1)*8}]`
+                return `[rbp+${(i+2)*8}]`
             })
         })
 

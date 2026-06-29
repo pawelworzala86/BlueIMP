@@ -419,7 +419,7 @@ export function generateExecutable(outputPath) {
     if(ins=='mov'){//if(asm=='call [printf]'){
       //result = 'FF 15 00 00 00 00'
       let dataName = ''
-      if(params[1].indexOf('[')>-1){
+      if((params[1].indexOf('[')>-1)&&((params[2].indexOf('-')==-1)&&(params[2].indexOf('+')==-1))){
         dataName = params[1].replace(/\[|\]/gm,'')
         params[1] = '[0x00000000]'
         result = INSTR['mov'](params)
@@ -429,7 +429,7 @@ export function generateExecutable(outputPath) {
           length: result.replace(/\ /gm,'').length/2,
           addr: OFFSET+3,
         })
-      }else if(params[2].indexOf('[')>-1){
+      }else if((params[2].indexOf('[')>-1)&&((params[2].indexOf('-')==-1)&&(params[2].indexOf('+')==-1))){
         dataName = params[2].replace(/\[|\]/gm,'')
         params[2] = '[0x00000000]'
         result = INSTR['mov'](params)
