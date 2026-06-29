@@ -158,7 +158,10 @@ export function generateExecutable(outputPath) {
 
 
 
-  const sourceCode = fs.readFileSync('./source/'+fileName+'.asm').toString()
+  let sourceCode = fs.readFileSync('./source/'+fileName+'.asm').toString()
+  
+  sourceCode = sourceCode.replace(/\;.*/gm,'')
+
   const SECTIONS = {
     code:'',
     data:'',
