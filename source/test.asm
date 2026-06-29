@@ -1,33 +1,23 @@
+macro testMacro paramA, paramB
+    lea rcx, [paramA]
+    mov rdx, [paramB]
+end macro
+
 .code
-    ;sub rsp, 40
-    ;lea rcx, [test]
-    ;mov rdx, [num]
-    ;call [printf]
-    ;add rsp, 40
+    ;testMacro test, num
+
     invoke printf, addr test, num
 
     call startA
-start:
 
-    sub rsp, 40
-    lea rcx, [testT]
-    call [printf]
-    add rsp, 40
+    invoke printf, addr testT
 
-    sub rsp, 40
-    lea rcx, [testT]
-    call [printf]
-    add rsp, 40
+    invoke printf, addr testT
 
-    sub rsp, 40
-    xor ecx, ecx
-    call [ExitProcess]
+    invoke ExitProcess
 
 startA:
-    sub rsp, 40
-    lea rcx, [testT]
-    call [printf]
-    add rsp, 40
+    invoke printf, addr testT
     ret
 
 .data

@@ -6,13 +6,31 @@ export function Prepare(code){
 
     code = code.replace(/macro([\s\S]+?)end macro/gm,match=>{
         let name = match.split(' ')[1].trim()
-        let params = match.replace('macro '+name,'').trim().split(',').map(t=>t.trim())
+        let params = match.replace('macro '+name,'').trim().split('\n')[0].split(',').map(t=>t.trim())
         match = match.replace(/^macro (.*)/gm,'')
         match = match.replace(/^end macro/gm,'')
         match = match.trim()
         MACRO.push({name,params,body:match})
         return ''
     })
+
+    //console.log(MACRO)
+
+    for(let MA of MACRO){
+        code = code.replace(new RegExp('\\b'+MA.name+'\\b(.*)','gm'),match=>{
+            const name = match.split(' ')[0].trim()
+            const params = match.replace(name+' ','').split(',').map(t=>t.trim())
+            console.log(name,params)
+            let result = MA.body
+            params.map((param,i)=>{
+                result = result.replace(new RegExp('\\b'+MA.params[i]+'\\b','gm'),param)
+            })
+            return result
+        })
+    }
+    //fs.writeFileSync('./prepared.asm', code)
+
+    //process.exit()
 
     /*let dataTXT = []
     code = code.replace(/.* db /gm,match=>{
@@ -43,7 +61,7 @@ export function Prepare(code){
     add rsp, 40`
     })
 
-    fs.writeFileSync('./prepared.asm', code)
+    //fs.writeFileSync('./prepared.asm', code)
 
     return code
 }
