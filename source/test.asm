@@ -16,8 +16,10 @@ start:
     call [ExitProcess]
 
 startA:
+    sub rsp, 40
     lea rcx, [testT]
     call [printf]
+    add rsp, 40
     ret
 
 .data

@@ -537,13 +537,13 @@ export function generateExecutable(outputPath) {
     }
   }
 
-  function toHexString(bytes) {
+  /*function toHexString(bytes) {
     return Array.from(bytes)
       .map(b => b.toString(16).padStart(2, '0'))
       .join(' ');
   }
   const hex = toHexString(code);
-  fs.writeFileSync('./hex.txt',hex)
+  fs.writeFileSync('./hex.txt',hex)*/
 
   // --- DYNAMICZNE OBLICZANIE OFFSETÓW RIP-RELATIVE ---
   
@@ -674,8 +674,8 @@ export function generateExecutable(outputPath) {
 
 
 
-  const hex2 = toHexString(exe);
-  fs.writeFileSync('./exe.txt',hex2)
+  //const hex2 = toHexString(exe);
+  //fs.writeFileSync('./exe.txt',hex2)
 
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
