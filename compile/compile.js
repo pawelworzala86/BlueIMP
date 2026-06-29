@@ -47,6 +47,15 @@ function writeUInt32LE(array, value, offset) {
   array[offset + 2] = (value >> 16) & 0xff;
   array[offset + 3] = (value >> 24) & 0xff;
 }
+function writeInt32LE(array, value, offset) {
+  // wymuszenie zakresu signed 32-bit
+  value = value | 0; // konwersja do int32 (two's complement)
+
+  array[offset]     = value & 0xFF;
+  array[offset + 1] = (value >> 8) & 0xFF;
+  array[offset + 2] = (value >> 16) & 0xFF;
+  array[offset + 3] = (value >> 24) & 0xFF;
+}
 
 function writeUInt16LE(array, value, offset) {
   array[offset] = value & 0xff;
@@ -181,6 +190,8 @@ export function generateExecutable(outputPath) {
   const ADDR = {}
 
   const DATA = []
+
+  const FUNCS = {}
   //  {name:'hello',kind:'db',value:'Hello World!\n\0'},
   //  {name:'test',kind:'db',value:'test!\n\0'},
   //]
@@ -341,19 +352,38 @@ export function generateExecutable(outputPath) {
     //  result = '31 C0'
     //}
     if(ins=='call'){//if(asm=='call [printf]'){
-      //result = 'FF 15 00 00 00 00'
-      let dataName = ''
-      if(params[1].indexOf('[')>-1){
-        dataName = params[1].replace(/\[|\]/gm,'')
-        params[1] = '[0x00000000]'
+      console.log('call = ',params)
+      console.log('FUNCS = ',FUNCS)
+      if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
+        //result = 'E8 00 00 00 00'
+        let dataName = ''
+        if(params[1].indexOf('[')>-1){
+          dataName = params[1].replace(/\[|\]/gm,'')
+          params[1] = '[0x00000000]'
+        }
+        result = 'E8 00 00 00 00'//INSTR['call'](params)
+        REPL.push({
+          name: dataName,//'printf',
+          offset: OFFSET,
+          length: result.replace(/\ /gm,'').length/2,
+          addr: OFFSET+1,
+          local: true,
+        })
+      }else{
+        //result = 'FF 15 00 00 00 00'
+        let dataName = ''
+        if(params[1].indexOf('[')>-1){
+          dataName = params[1].replace(/\[|\]/gm,'')
+          params[1] = '[0x00000000]'
+        }
+        result = INSTR['call'](params)
+        REPL.push({
+          name: dataName,//'printf',
+          offset: OFFSET,
+          length: result.replace(/\ /gm,'').length/2,
+          addr: OFFSET+2,
+        })
       }
-      result = INSTR['call'](params)
-      REPL.push({
-        name: dataName,//'printf',
-        offset: OFFSET,
-        length: result.replace(/\ /gm,'').length/2,
-        addr: OFFSET+2,
-      })
     }
     //if(asm=='xor ecx, ecx'){
     //  result = '31 C9'
@@ -395,6 +425,12 @@ export function generateExecutable(outputPath) {
       }
     }
 
+    if(ins[ins.length-1]==':'){
+      const name = ins.trim().replace(':','')
+      //console.log('ETYKIETA')
+      //process.exit()
+      FUNCS[name] = OFFSET
+    }
     
 
     if(INSTR[ins]&&!result.length){
@@ -409,6 +445,11 @@ export function generateExecutable(outputPath) {
   //console.log(importEntries)
 
   let code = SECTIONS.code
+  code.replace(/(.*)\:/gm,match=>{
+    const name = match.replace(':','')
+    FUNCS[name] = 0
+    return match
+  })
   /*fs.readFileSync('./source/test.asm').toString()/*`sub rsp, 40
     and rsp, -16
 
@@ -462,11 +503,20 @@ export function generateExecutable(outputPath) {
 
 
   console.log(REPL)
+  console.log(FUNCS)
+  //process.exit()
 
   for(const RP of REPL){
-    const ripAfterLea = RVA_TEXT_START + RP.offset + RP.length
-    const offsetToUse = ADDR[RP.name] - ripAfterLea
-    writeUInt32LE(code, offsetToUse, RP.addr)
+    if(RP.local){
+      const localOffset = FUNCS[RP.name] - RP.offset + 5
+      console.log(localOffset)
+      //process.exit()
+      writeInt32LE(code, localOffset, RP.addr)
+    }else{
+      const ripAfterLea = RVA_TEXT_START + RP.offset + RP.length
+      const offsetToUse = ADDR[RP.name] - ripAfterLea
+      writeUInt32LE(code, offsetToUse, RP.addr)
+    }
   }
 
   // --- DYNAMICZNE OBLICZANIE OFFSETÓW RIP-RELATIVE ---
