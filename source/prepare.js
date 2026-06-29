@@ -1,11 +1,16 @@
 const fs = require('fs')
 const path = require('path')
 
+let sourceFileName = process.argv[2]
+sourceFileName = sourceFileName.replace(/[a-zA-Z0-9\_]+\.asm/gm,'')
+
 function Prepare(code){
 
     code = code.replace(/include .*/gm,match=>{
         let file = match.split('\'')[1].trim()
-        const data = fs.readFileSync(path.resolve(file)).toString()
+        let p = path.resolve(sourceFileName,file)
+        console.log(p)
+        const data = fs.readFileSync(p).toString()
         return data
     })
 
