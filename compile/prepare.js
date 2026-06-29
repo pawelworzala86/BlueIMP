@@ -127,7 +127,7 @@ export function Prepare(code){
     code = code.replace(/\[\[/gm,'[')
     code = code.replace(/\]\]/gm,']')
 
-    fs.writeFileSync('./prepared.asm', code)
+    //fs.writeFileSync('./prepared.asm', code)
 
     //process.exit()
 
