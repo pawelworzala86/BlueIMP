@@ -1,5 +1,10 @@
-import fs from 'fs';
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath, pathToFileURL } from 'url'
 import { Prepare } from './prepare.js'
+
+const __filename = fileURLToPath(import.meta.url).replace('compile\\compile.js','');
+//console.log(__filename);
 
 /*import { getSubInstruction } from './instructions/sub.js'
 import { getAndInstruction } from './instructions/and.js'
@@ -19,11 +24,14 @@ const INSTR = {
 }*/
 export const INSTR = {};
 
-const files = fs.readdirSync('./compile/instructions/').filter(f => f.endsWith('.js'));
+const files = fs.readdirSync(path.resolve(__filename,'./compile/instructions/')).filter(f => f.endsWith('.js'));
 for (const file of files) {
   const mnemonic = file.replace('.js', '');
-  const modulePath = './instructions/' + file
-  const mod = await import(modulePath)
+  const modulePath = './compile/instructions/' + file
+  let p = path.resolve(__filename,modulePath)
+  console.log(p)
+  const url = pathToFileURL(p).href;
+  const mod = await import(url)
   const fn = Object.values(mod).find(v => typeof v === 'function')
   if(fn){
     INSTR[mnemonic] = fn
@@ -32,8 +40,8 @@ for (const file of files) {
 
 
 
-const fileName = process.argv[2]
-
+const sourceFileName = process.argv[2]
+const destinationFileName = process.argv[3]
 
 
 
@@ -159,7 +167,7 @@ export function generateExecutable(outputPath) {
 
 
 
-  let sourceCode = fs.readFileSync('./source/'+fileName+'.asm').toString()
+  let sourceCode = fs.readFileSync(sourceFileName).toString()
   
   sourceCode = sourceCode.replace(/\;.*/gm,'')
 
@@ -686,4 +694,4 @@ export function generateExecutable(outputPath) {
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
 }
-generateExecutable('./out/'+fileName+'.exe');
+generateExecutable(destinationFileName);

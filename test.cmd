@@ -1,0 +1,1 @@
+bh source\test.asm out\test.exe
