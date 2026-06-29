@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Prepare } from './prepare.js'
 
 /*import { getSubInstruction } from './instructions/sub.js'
 import { getAndInstruction } from './instructions/and.js'
@@ -161,6 +162,8 @@ export function generateExecutable(outputPath) {
   let sourceCode = fs.readFileSync('./source/'+fileName+'.asm').toString()
   
   sourceCode = sourceCode.replace(/\;.*/gm,'')
+
+  sourceCode = Prepare(sourceCode)
 
   const SECTIONS = {
     code:'',
@@ -373,7 +376,7 @@ export function generateExecutable(outputPath) {
       if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
         //result = 'E8 00 00 00 00'
         let dataName = ''
-        if(params[1].indexOf('[')>-1){
+        if(params[1].indexOf('0x')==-1){
           dataName = params[1].replace(/\[|\]/gm,'')
           params[1] = '[0x00000000]'
         }

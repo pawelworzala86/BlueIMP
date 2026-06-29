@@ -1,10 +1,14 @@
 .code
-    ;sub rsp, 40
-    ;lea rcx, [test]
-    ;mov rdx, [num]
-    ;call [printf]
-    ;add rsp, 40
-    invoke printf, addr test, num
+    
+    
+    
+    
+    
+        sub rsp, 40
+    lea rcx, [test]
+mov rdx, [num]
+    call [printf]
+    add rsp, 40
 
     call startA
 start:
