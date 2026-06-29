@@ -227,10 +227,12 @@ export function generateExecutable(outputPath) {
     if(line.trim().length){
       const parts = line.trim().split(' ')
       if(parts[1]=='db'){
+        let value = line.replace(parts[0]+' '+parts[1],'').trim()
+        value = value.replace(',0','').replace(/\'/gm,'')
         DATA.push({
           name: parts[0],
           kind: parts[1],
-          value: parts[2].replace(',0','').replace(/\'/gm,'')+'\0',
+          value: value+'\0',
         })
       }else if(parts[1]=='dq'){
         DATA.push({

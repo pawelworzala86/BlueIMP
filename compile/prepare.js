@@ -1,6 +1,13 @@
 import fs from 'fs'
+import path from 'path'
 
 export function Prepare(code){
+
+    code = code.replace(/include .*/gm,match=>{
+        let file = match.split('\'')[1].trim()
+        const data = fs.readFileSync(path.resolve(file)).toString()
+        return data
+    })
 
     const MACRO = []
 
