@@ -8,8 +8,8 @@ function Prepare(code){
 
     code = code.replace(/include .*/gm,match=>{
         let file = match.split('\'')[1].trim()
-        let p = path.resolve(sourceFileName,file)
-        console.log(p)
+        let p = path.resolve(sourceFileName,'../../cache/'+file)
+        console.log('include file... ',p)
         const data = fs.readFileSync(p).toString()
         return data
     })

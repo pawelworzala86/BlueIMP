@@ -90,7 +90,7 @@ function writeUInt16LE(array, value, offset) {
   array[offset + 1] = (value >> 8) & 0xff;
 }
 
-function generateExecutable(outputPath) {
+function generateExecutable(sourceFileName,outputPath) {
   function writePEHeader(fileSize,textSize,textPointer,idataSize,idataPointer){
     //const fileSize = 0x800; 
     const exe = new Uint8Array(fileSize);
@@ -172,12 +172,17 @@ function generateExecutable(outputPath) {
 
 
 
+  console.log('sourceFileName... ',sourceFileName)
 
   let sourceCode = fs.readFileSync(sourceFileName).toString()
+
+  console.log('sourceCode... ',sourceCode)
   
   sourceCode = sourceCode.replace(/\;.*/gm,'')
 
   sourceCode = Prepare(sourceCode)
+
+  console.log('sourceCode... ',sourceCode)
 
   const SECTIONS = {
     code:'',
@@ -702,4 +707,9 @@ function generateExecutable(outputPath) {
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
 }
-generateExecutable(destinationFileName);
+
+if(!module.exports){
+  generateExecutable(sourceFileName,destinationFileName);
+}
+
+module.exports = generateExecutable
