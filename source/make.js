@@ -90,7 +90,7 @@ function writeUInt16LE(array, value, offset) {
   array[offset + 1] = (value >> 8) & 0xff;
 }
 
-function generateExecutable(sourceFileName,outputPath) {
+function generateExecutable(sourceCode,outputPath) {
   function writePEHeader(fileSize,textSize,textPointer,idataSize,idataPointer){
     //const fileSize = 0x800; 
     const exe = new Uint8Array(fileSize);
@@ -174,7 +174,7 @@ function generateExecutable(sourceFileName,outputPath) {
 
   console.log('sourceFileName... ',sourceFileName)
 
-  let sourceCode = fs.readFileSync(sourceFileName).toString()
+  //let sourceCode = fs.readFileSync(sourceFileName).toString()
 
   console.log('sourceCode... ',sourceCode)
   
