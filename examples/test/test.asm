@@ -14,6 +14,8 @@ end macro
     ;call [testProc]
     ;add rsp, 16
 
+    lea rax, [decl1]
+    ;mov [rbp-8], rax
 
     invoke printf, addr testT
 
@@ -59,6 +61,7 @@ endp
     testT db 'start',0
     test db 'num=%i',0
     num dq 123
+    decl1 db '!!',0
 
 .import
     library kernel32,'KERNEL32.DLL',\
