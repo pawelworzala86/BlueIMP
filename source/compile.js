@@ -1,4 +1,5 @@
 const fs = require('fs')
+const path = require('path')
 const generateExe = require('./make.js')
 
 const sourceFileName = process.argv[2]

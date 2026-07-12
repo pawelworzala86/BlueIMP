@@ -187,5 +187,6 @@ console.log(getMovInstruction(['mov','rcx','[0x00000000]']));
 console.log(getMovInstruction(['mov','[0x00000000]','rcx']));
 console.log(getMovInstruction(['mov','rcx','[rax+16]']));
 console.log(getMovInstruction(['mov','[rax+16]','rax']));
+console.log(getMovInstruction(['mov','[rbp-8]','rcx']));
 
 module.exports = getMovInstruction
