@@ -155,6 +155,11 @@ lines.map(line=>{
 
 console.log('ADDR',ADDR)
 
+console.log('call:',25+6)
+let addr = 4096-31
+console.log('addr',addr,toHex(addr,4))
+
+
 source = newLines.join('\n')
 
 fs.writeFileSync('./examples/'+fileName+'.txt', source)
