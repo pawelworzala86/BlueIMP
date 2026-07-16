@@ -85,11 +85,15 @@ function txtToHex(text, bytes) {
     return hex.match(/.{1,2}/g).join(" ");
 }
 
-lines = lines.map(line=>{
+let newLines = []
+let OFFSET = 0
+lines.map(line=>{
     const instruction = line.trim().split(/\s+/)[0]
     let parameters = line.replace(instruction,'').trim().split(',')
         .map(p=>p.trim())
     console.log(instruction,parameters)
+
+    let result = ''
 
     if(['db','dd','dq'].includes(instruction)){
         let bytes = 8
@@ -106,12 +110,13 @@ lines = lines.map(line=>{
             }
             return num
         })
-        return parameters.map(formatHex).join(' ')
+        result = parameters.map(formatHex).join(' ')
     }
 
-    return line
+    OFFSET += result.split(' ').length
+    newLines.push(result)
 })
 
-source = lines.join('\n')
+source = newLines.join('\n')
 
 fs.writeFileSync('./examples/test.txt', source)
