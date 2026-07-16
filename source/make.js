@@ -425,6 +425,25 @@ function generateExecutable(sourceCode,outputPath) {
         })
       }
     }
+    if(ins=='jmp'){//if(asm=='call [printf]'){
+      console.log('jmp = ',params)
+      console.log('FUNCS = ',FUNCS)
+      //if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
+        //result = 'E8 00 00 00 00'
+        let dataName = ''
+        if(params[1].indexOf('0x')==-1){
+          dataName = params[1].replace(/\[|\]/gm,'')
+          params[1] = '[0x00000000]'
+        }
+        result = 'E9 00 00 00 00'//INSTR['call'](params)
+        REPL.push({
+          name: dataName,//'printf',
+          offset: OFFSET,
+          length: result.replace(/\ /gm,'').length/2,
+          addr: OFFSET+1,
+          local: true,
+        })
+    }
     //if(asm=='xor ecx, ecx'){
     //  result = '31 C9'
     //}
