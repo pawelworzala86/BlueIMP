@@ -1,15 +1,26 @@
 import fs from 'fs';
 
-function writeUInt32LE(array, value, offset) {
+const fileSize = 0x600; 
+const plikPE = new Uint8Array(fileSize);
+
+function writeUInt32LE(array, value, offset, comment='') {
   array[offset] = value & 0xff;
   array[offset + 1] = (value >> 8) & 0xff;
   array[offset + 2] = (value >> 16) & 0xff;
   array[offset + 3] = (value >> 24) & 0xff;
+
+  plikPE[offset] = value & 0xff;
+  plikPE[offset + 1] = (value >> 8) & 0xff;
+  plikPE[offset + 2] = (value >> 16) & 0xff;
+  plikPE[offset + 3] = (value >> 24) & 0xff;
 }
 
-function writeUInt16LE(array, value, offset) {
+function writeUInt16LE(array, value, offset, comment='') {
   array[offset] = value & 0xff;
   array[offset + 1] = (value >> 8) & 0xff;
+
+  plikPE[offset] = value & 0xff;
+  plikPE[offset + 1] = (value >> 8) & 0xff;
 }
 
 export function generatePrintfExecutable(outputPath) {
@@ -18,11 +29,14 @@ export function generatePrintfExecutable(outputPath) {
 
   // --- 1. DOS HEADER ---
   exe[0] = 0x4D; exe[1] = 0x5A; // 'MZ'
+  plikPE[0] = 0x4D; plikPE[1] = 0x5A; // 'MZ'
   writeUInt32LE(exe, 0x00000080, 0x3C); // e_lfanew = 0x80
 
   // --- 2. PE HEADER (COFF) ---
   const peOffset = 0x80;
   exe[peOffset] = 0x50; exe[peOffset + 1] = 0x45; // 'PE\0\0'
+  plikPE[peOffset] = 0x50; plikPE[peOffset + 1] = 0x45; // 'PE\0\0'
+
   writeUInt16LE(exe, 0x8664, peOffset + 4);     // Machine: AMD64 (64-bit)
   writeUInt16LE(exe, 2, peOffset + 6);          // Number of Sections: 2 (.text, .idata)
   writeUInt32LE(exe, 0x60000000, peOffset + 8); // TimeDateStamp
@@ -133,6 +147,7 @@ export function generatePrintfExecutable(outputPath) {
 
   // Zapisanie gotowego kodu do pliku
   exe.set(code, 0x200);
+  plikPE.set(code, 0x200);
 
   // --- 6. SEKCJA IMPORTÓW .idata (Raw = 0x400, RVA = 0x2000) ---
   const idataRaw = 0x400;
@@ -174,8 +189,20 @@ export function generatePrintfExecutable(outputPath) {
   // Tekst przekazywany do printf (0x0A to nowa linia \n)
   exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);   // RVA 0x20C0
 
+  //const enc = new TextEncoder();
+  
+  plikPE.set(enc.encode('\0\0ExitProcess\0'), idataRaw + 0x80); // RVA 0x2080
+  plikPE.set(enc.encode('\0\0printf\0'), idataRaw + 0x94);      // RVA 0x2094
+
+  plikPE.set(enc.encode('kernel32.dll\0'), idataRaw + 0xA0);    // RVA 0x20A0
+  plikPE.set(enc.encode('msvcrt.dll\0'), idataRaw + 0xAD);      // RVA 0x20AD
+
+  // Tekst przekazywany do printf (0x0A to nowa linia \n)
+  plikPE.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);   // RVA 0x20C0
+
   fs.writeFileSync(outputPath, exe);
+  fs.writeFileSync('pe64.exe', plikPE);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
 }
 
-generatePrintfExecutable('./hello_printf.exe');
+generatePrintfExecutable('./hello.exe');
