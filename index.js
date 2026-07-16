@@ -85,8 +85,26 @@ function txtToHex(text, bytes) {
     return hex.match(/.{1,2}/g).join(" ");
 }
 
+function hexToLE(hex) {
+    // usuń ewentualne "0x"
+    hex = hex.replace(/^0x/, "");
+
+    // dopaduj do parzystej długości
+    if (hex.length % 2 !== 0) hex = "0" + hex;
+
+    // podziel na bajty
+    const bytes = hex.match(/.{2}/g);
+
+    // odwróć kolejność
+    return bytes.reverse().join("");
+}
+
+
+
+
 let newLines = []
 let OFFSET = 0
+let ADDR = {}
 lines.map(line=>{
     const instruction = line.trim().split(/\s+/)[0]
     let parameters = line.replace(instruction,'').trim().split(',')
@@ -95,10 +113,12 @@ lines.map(line=>{
 
     let result = ''
 
-    if(['db','dd','dq'].includes(instruction)){
+    if(['db','dw','dd','dq'].includes(instruction)){
         let bytes = 8
         if(instruction=='dd'){
             bytes = 4
+        }else if(instruction=='dw'){
+            bytes = 2
         }else if(instruction=='db'){
             bytes = 1
         }
@@ -108,9 +128,13 @@ lines.map(line=>{
                 parameter = parameter.substring(1,parameter.length-1)
                 return txtToHex(parameter,bytes)
             }
-            return num
+            return hexToLE(num)
         })
         result = parameters.map(formatHex).join(' ')
+    }
+    if(instruction.endsWith(':')){
+        const name = instruction.substring(0,instruction.length-1)
+        ADDR[name] = OFFSET
     }
 
     OFFSET += result.split(' ').length
