@@ -16,6 +16,9 @@ const getAddInstruction = require('./instructions/add.js')
 const getPopInstruction = require('./instructions/pop.js')
 const getPushInstruction = require('./instructions/push.js')
 
+const getCmpInstruction = require('./instructions/cmp.js')
+const getJeInstruction = require('./instructions/je.js')
+
 
 const INSTR = {
   'sub': getSubInstruction,
@@ -27,6 +30,9 @@ const INSTR = {
   'add': getAddInstruction,
   'pop': getPopInstruction,
   'push': getPushInstruction,
+
+  'cmp': getCmpInstruction,
+  'je': getJeInstruction,
 }
 /*export const INSTR = {};
 
@@ -443,6 +449,54 @@ function generateExecutable(sourceCode,outputPath) {
           addr: OFFSET+1,
           local: true,
         })
+    }
+    if(ins=='cmp'){//if(asm=='call [printf]'){
+      console.log('cmp = ',params)
+      //console.log('FUNCS = ',FUNCS)
+      if(FUNCS[params[2].replace(/\[|\]/gm,'')]!==undefined){
+        //result = 'E8 00 00 00 00'
+        let dataName = ''
+        if(params[2].indexOf('0x')==-1){
+          dataName = params[2].replace(/\[|\]/gm,'')
+          params[2] = '[0x00000000]'
+        }
+        result = INSTR['cmp'](params)
+        REPL.push({
+          name: dataName,//'printf',
+          offset: OFFSET,
+          length: result.replace(/\ /gm,'').length/2,
+          addr: OFFSET+3,
+          local: true,
+        })
+      }else{
+        //result = 'FF 15 00 00 00 00'
+        result = INSTR['cmp'](params)
+        console.log(result)
+      }
+    }
+    if(ins=='je'){//if(asm=='call [printf]'){
+      console.log('je = ',params)
+      //console.log('FUNCS = ',FUNCS)
+      if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
+        //result = 'E8 00 00 00 00'
+        let dataName = ''
+        if(params[1].indexOf('0x')==-1){
+          dataName = params[1].replace(/\[|\]/gm,'')
+          params[1] = '[0x00000000]'
+        }
+        result = INSTR['je'](params)
+        REPL.push({
+          name: dataName,
+          offset: OFFSET,
+          length: result.replace(/\ /gm,'').length/2,
+          addr: OFFSET+2,
+          local: true,
+        })
+      }else{
+        //result = 'FF 15 00 00 00 00'
+        result = INSTR['je'](params)
+        console.log(result)
+      }
     }
     //if(asm=='xor ecx, ecx'){
     //  result = '31 C9'

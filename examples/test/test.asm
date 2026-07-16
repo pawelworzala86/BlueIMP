@@ -15,6 +15,16 @@ end macro
 funcA:
     invoke printf, addr testT
 
+    mov rax, [num]
+    cmp rax, rax
+    je [fnC]
+
+    jmp funcB
+fnC:
+    invoke printf, addr testT
+
+funcB:
+
     invoke ExitProcess
 
 
