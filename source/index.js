@@ -106,6 +106,7 @@ function hexToLE(hex) {
 
 let newLines = []
 let OFFSET = 0
+let totalOFFSET = 0
 let ADDR = {}
 lines.map(line=>{
     line = line.replace(/\;.*/gm,'').trim()
@@ -148,6 +149,7 @@ lines.map(line=>{
     if(result.length==0){
         result = line
     }
+    totalOFFSET += result.split(' ').length
 
     OFFSET += result.split(' ').length
     newLines.push(result)
@@ -158,6 +160,8 @@ console.log('ADDR',ADDR)
 console.log('call:',25+6)
 let addr = 4096-31
 console.log('addr',addr,toHex(addr,4))
+
+console.log('totalOFFSET',totalOFFSET)
 
 
 source = newLines.join('\n')
