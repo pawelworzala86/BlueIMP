@@ -40,19 +40,20 @@ function intToHexSigned(value, bytes) {
         .padStart(bytes * 2, "0")
 }
 function numToHex(num,bytes=8){
-    if((num.indexOf('f')>-1)||(num.indexOf('.')>-1)){
+    if(num.endsWith('f')||(num.indexOf('.')>-1)){
         num = num.replace('f','')
         if(bytes==4){
             return floatToHex32(Number(num))
         }
         return floatToHex64(Number(num))
-    }else if(num.indexOf('i')>-1){
+    }else if(num.endsWith('i')){
         num = num.replace('i','')
         return intToHexSigned(Number(num),bytes)
-    }else{
+    }else if(parseInt(num.replace('u',''))||(Number(num)==0)){
         num = num.replace('u','')
         return toHex(Number(num),bytes)
     }
+    return null
 }
 
 function formatHex(hex) {
@@ -63,6 +64,26 @@ function formatHex(hex) {
         .toUpperCase()
 }
 
+function txtToHex(text, bytes) {
+    let hex = "";
+
+    // konwersja znaków na hex
+    for (let i = 0; i < text.length; i++) {
+        hex += text.charCodeAt(i)
+            .toString(16)
+            .toUpperCase()
+            .padStart(2, "0");
+    }
+
+    // wyrównanie do podanej liczby bajtów
+    const needed = bytes * 2 - hex.length;
+    if (needed > 0) {
+        hex += "0".repeat(needed);
+    }
+
+    // formatowanie po 2 znaki
+    return hex.match(/.{1,2}/g).join(" ");
+}
 
 lines = lines.map(line=>{
     const instruction = line.trim().split(/\s+/)[0]
@@ -78,7 +99,12 @@ lines = lines.map(line=>{
             bytes = 1
         }
         parameters = parameters.map(parameter=>{
-            return numToHex(parameter,bytes)
+            const num = numToHex(parameter,bytes)
+            if(num===null){
+                parameter = parameter.substring(1,parameter.length-1)
+                return txtToHex(parameter,bytes)
+            }
+            return num
         })
         return parameters.map(formatHex).join(' ')
     }
