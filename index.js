@@ -106,6 +106,8 @@ let newLines = []
 let OFFSET = 0
 let ADDR = {}
 lines.map(line=>{
+    line = line.replace(/\;.*/gm,'').trim()
+
     const instruction = line.trim().split(/\s+/)[0]
     let parameters = line.replace(instruction,'').trim().split(',')
         .map(p=>p.trim())
@@ -136,6 +138,9 @@ lines.map(line=>{
         const name = instruction.substring(0,instruction.length-1)
         ADDR[name] = OFFSET
     }
+    if(result.length==0){
+        result = line
+    }
 
     OFFSET += result.split(' ').length
     newLines.push(result)
@@ -144,3 +149,18 @@ lines.map(line=>{
 source = newLines.join('\n')
 
 fs.writeFileSync('./examples/test.txt', source)
+
+let exeTxt = source.replace(/\ |\n/gm,'')
+
+function hexToUint8Array(hex) {
+    hex = hex.replace(/\s+/g, ""); // usuń spacje/newline jeśli są
+    const len = hex.length / 2;
+    const arr = new Uint8Array(len);
+
+    for (let i = 0; i < len; i++) {
+        arr[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return arr;
+}
+
+fs.writeFileSync('./examples/test.exe', hexToUint8Array(exeTxt))

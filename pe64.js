@@ -183,15 +183,12 @@ export function generatePrintfExecutable(outputPath) {
   exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);   // RVA 0x20C0
 
 
-  function uint8ToHexText(arr) {
-      let out = "";
-      for (let i = 0; i < arr.length; i++) {
-          out += arr[i].toString(16).padStart(2, "0").toUpperCase();
-      }
-      return out;
+  function uint8ToHexBytes(arr) {
+      return Array.from(arr, (value) => value.toString(16).padStart(2, "0").toUpperCase());
   }
 
-  let hex = uint8ToHexText(exe)
+  const hexBytes = uint8ToHexBytes(exe)
+  const hex = hexBytes.join(' ')
 
   // Posortuj FORMAT po pozycji bajtów
   FORMAT.sort((a, b) => a.from - b.from)
@@ -200,26 +197,32 @@ export function generatePrintfExecutable(outputPath) {
   let txt = ''
   let lastOFFSET = 0
   for (const FR of FORMAT) {
-    // Hex PRZED FORMAT range
-    txt += hex.slice(lastOFFSET * 2, FR.from * 2)
-    txt += '\n'
-    // Hex w FORMAT range z komentarzem
-    txt += hex.slice(FR.from * 2, (FR.to + 1) * 2)
+    const prefixBytes = hexBytes.slice(lastOFFSET, FR.from)
+    if (prefixBytes.length > 0) {
+      txt += prefixBytes.join(' ')
+      txt += '\n'
+    }
+
+    const rangeBytes = hexBytes.slice(FR.from, FR.to + 1)
+    txt += rangeBytes.join(' ')
     if (FR.comment) {
       txt += '    ;' + FR.comment
     }
     txt += '\n'
     lastOFFSET = FR.to + 1
   }
-  // Pozostały hex na koniec
-  txt += hex.slice(lastOFFSET * 2)
+
+  const suffixBytes = hexBytes.slice(lastOFFSET)
+  if (suffixBytes.length > 0) {
+    txt += suffixBytes.join(' ')
+  }
 
   fs.writeFileSync('pe64.txt', txt)
 
   // Porównanie heksów
   console.log(`txt.length: ${txt.length}`)
   let txtClean = txt.replace(/;[^\n]*/g, '').replace(/\s+/g, '')  // Komentarze PIERWSZA
-  let exeHex = uint8ToHexText(exe)
+  let exeHex = hexBytes.join('')
   
   console.log(`FORMAT elements: ${FORMAT.length}`)
   console.log(`txtClean.length: ${txtClean.length}`)
