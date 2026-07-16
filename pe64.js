@@ -1,26 +1,19 @@
 import fs from 'fs';
 
-const fileSize = 0x600; 
-const plikPE = new Uint8Array(fileSize);
+const FORMAT = []
 
 function writeUInt32LE(array, value, offset, comment='') {
   array[offset] = value & 0xff;
   array[offset + 1] = (value >> 8) & 0xff;
   array[offset + 2] = (value >> 16) & 0xff;
   array[offset + 3] = (value >> 24) & 0xff;
-
-  plikPE[offset] = value & 0xff;
-  plikPE[offset + 1] = (value >> 8) & 0xff;
-  plikPE[offset + 2] = (value >> 16) & 0xff;
-  plikPE[offset + 3] = (value >> 24) & 0xff;
+  FORMAT.push({from:offset,to:offset+3,comment})
 }
 
 function writeUInt16LE(array, value, offset, comment='') {
   array[offset] = value & 0xff;
   array[offset + 1] = (value >> 8) & 0xff;
-
-  plikPE[offset] = value & 0xff;
-  plikPE[offset + 1] = (value >> 8) & 0xff;
+  FORMAT.push({from:offset,to:offset+1,comment})
 }
 
 export function generatePrintfExecutable(outputPath) {
@@ -29,75 +22,73 @@ export function generatePrintfExecutable(outputPath) {
 
   // --- 1. DOS HEADER ---
   exe[0] = 0x4D; exe[1] = 0x5A; // 'MZ'
-  plikPE[0] = 0x4D; plikPE[1] = 0x5A; // 'MZ'
-  writeUInt32LE(exe, 0x00000080, 0x3C); // e_lfanew = 0x80
+  writeUInt32LE(exe, 0x00000080, 0x3C, 'e_lfanew = 0x80')
 
   // --- 2. PE HEADER (COFF) ---
   const peOffset = 0x80;
   exe[peOffset] = 0x50; exe[peOffset + 1] = 0x45; // 'PE\0\0'
-  plikPE[peOffset] = 0x50; plikPE[peOffset + 1] = 0x45; // 'PE\0\0'
 
-  writeUInt16LE(exe, 0x8664, peOffset + 4);     // Machine: AMD64 (64-bit)
-  writeUInt16LE(exe, 2, peOffset + 6);          // Number of Sections: 2 (.text, .idata)
-  writeUInt32LE(exe, 0x60000000, peOffset + 8); // TimeDateStamp
-  writeUInt16LE(exe, 0xF0, peOffset + 20);      // Size of Optional Header (240 bajtów)
-  writeUInt16LE(exe, 0x0022, peOffset + 22);    // Characteristics: EXECUTABLE_IMAGE | LARGE_ADDRESS_AWARE
+  writeUInt16LE(exe, 0x8664, peOffset + 4, 'Machine: AMD64 (64-bit)')
+  writeUInt16LE(exe, 2, peOffset + 6, 'Number of Sections: 2 (.text, .idata)')
+  writeUInt32LE(exe, 0x60000000, peOffset + 8, 'TimeDateStamp')
+  writeUInt16LE(exe, 0xF0, peOffset + 20, 'Size of Optional Header (240 bajtów)')
+  writeUInt16LE(exe, 0x0022, peOffset + 22, 'Characteristics: EXECUTABLE_IMAGE | LARGE_ADDRESS_AWARE')
 
   // --- 3. OPTIONAL HEADER (PE32+) ---
   const optOffset = peOffset + 24;
-  writeUInt16LE(exe, 0x020B, optOffset);          // Magic: PE32+ (64-bit)
+  writeUInt16LE(exe, 0x020B, optOffset, 'Magic: PE32+ (64-bit)')
   
-  writeUInt32LE(exe, 0x00000200, optOffset + 4);  // Size of Code
-  writeUInt32LE(exe, 0x00000200, optOffset + 8);  // Size of Initialized Data
+  writeUInt32LE(exe, 0x00000200, optOffset + 4, 'Size of Code')
+  writeUInt32LE(exe, 0x00000200, optOffset + 8, 'Size of Initialized Data')
   
-  writeUInt32LE(exe, 0x00001000, optOffset + 16);  // Address of Entry Point (RVA)
-  writeUInt32LE(exe, 0x00001000, optOffset + 20);  // Base Of Code
+  writeUInt32LE(exe, 0x00001000, optOffset + 16, 'Address of Entry Point (RVA)')
+  writeUInt32LE(exe, 0x00001000, optOffset + 20, 'Base Of Code')
   
-  writeUInt32LE(exe, 0x00400000, optOffset + 24);  // ImageBase (0x00400000)
+  writeUInt32LE(exe, 0x00400000, optOffset + 24, 'ImageBase (0x00400000)')
 
-  writeUInt32LE(exe, 0x00001000, optOffset + 32);  // Section Alignment (0x1000)
-  writeUInt32LE(exe, 0x00000200, optOffset + 36);  // File Alignment (0x200)
-  writeUInt16LE(exe, 6, optOffset + 40);          // Major OS Version
-  writeUInt16LE(exe, 0, optOffset + 42);          // Minor OS Version
-  writeUInt16LE(exe, 6, optOffset + 48);          // Major Subsystem Version
-  writeUInt16LE(exe, 0, optOffset + 50);          // Minor Subsystem Version
-  writeUInt32LE(exe, 0x00003000, optOffset + 56);  // Size of Image
-  writeUInt32LE(exe, 0x00000200, optOffset + 60);  // Size of Headers
-  writeUInt16LE(exe, 3, optOffset + 68);          // Subsystem: 3 = Windows CUI (Konsola)
+  writeUInt32LE(exe, 0x00001000, optOffset + 32, 'Section Alignment (0x1000)')
+  writeUInt32LE(exe, 0x00000200, optOffset + 36, 'File Alignment (0x200)')
+  writeUInt16LE(exe, 6, optOffset + 40, 'Major OS Version')
+  writeUInt16LE(exe, 0, optOffset + 42, 'Minor OS Version')
+  writeUInt16LE(exe, 6, optOffset + 48, 'Major Subsystem Version')
+  writeUInt16LE(exe, 0, optOffset + 50, 'Minor Subsystem Version')
+  writeUInt32LE(exe, 0x00003000, optOffset + 56, 'Size of Image')
+  writeUInt32LE(exe, 0x00000200, optOffset + 60, 'Size of Headers')
+  writeUInt16LE(exe, 3, optOffset + 68, 'Subsystem: 3 = Windows CUI (Konsola)')
   
-  writeUInt32LE(exe, 0x00100000, optOffset + 72); // Stack Reserve
-  writeUInt32LE(exe, 0x00001000, optOffset + 80); // Stack Commit
-  writeUInt32LE(exe, 0x00100000, optOffset + 88); // Heap Reserve
-  writeUInt32LE(exe, 0x00001000, optOffset + 96); // Heap Commit
-  writeUInt32LE(exe, 16, optOffset + 108);        // Number of Data Directories
+  writeUInt32LE(exe, 0x00100000, optOffset + 72, 'Stack Reserve')
+  writeUInt32LE(exe, 0x00001000, optOffset + 80, 'Stack Commit')
+  writeUInt32LE(exe, 0x00100000, optOffset + 88, 'Heap Reserve')
+  writeUInt32LE(exe, 0x00001000, optOffset + 96, 'Heap Commit')
+  writeUInt32LE(exe, 16, optOffset + 108, 'Number of Data Directories')
 
   // Data Directory #1: Import Table (RVA 0x2020)
-  writeUInt32LE(exe, 0x00002020, optOffset + 120); 
-  writeUInt32LE(exe, 0x0000003C, optOffset + 124); 
+  writeUInt32LE(exe, 0x00002020, optOffset + 120, '')
+  writeUInt32LE(exe, 0x0000003C, optOffset + 124, '')
 
   // Data Directory #12: IAT (RVA 0x2000)
-  writeUInt32LE(exe, 0x00002000, optOffset + 208); 
-  writeUInt32LE(exe, 0x00000020, optOffset + 212); 
+  writeUInt32LE(exe, 0x00002000, optOffset + 208, '')
+  writeUInt32LE(exe, 0x00000020, optOffset + 212, '')
 
   // --- 4. SECTION HEADERS ---
   let secOffset = optOffset + 240;
 
   // Sekcja .text
   exe.set(new TextEncoder().encode('.text\0\0\0'), secOffset);
-  writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
-  writeUInt32LE(exe, 0x00001000, secOffset + 12); // Virtual Address (RVA 0x1000)
-  writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
-  writeUInt32LE(exe, 0x00000200, secOffset + 20); // Pointer to Raw Data (0x200)
-  writeUInt32LE(exe, 0x60000020, secOffset + 36); // CODE | EXECUTE | READ
+  writeUInt32LE(exe, 0x00001000, secOffset + 8, 'Virtual Size')
+  writeUInt32LE(exe, 0x00001000, secOffset + 12, 'Virtual Address (RVA 0x1000)')
+  writeUInt32LE(exe, 0x00000200, secOffset + 16, 'Size of Raw Data')
+  writeUInt32LE(exe, 0x00000200, secOffset + 20, 'Pointer to Raw Data (0x200)')
+  writeUInt32LE(exe, 0x60000020, secOffset + 36, 'CODE | EXECUTE | READ')
 
   // Sekcja .idata
   secOffset += 40;
   exe.set(new TextEncoder().encode('.idata\0\0'), secOffset);
-  writeUInt32LE(exe, 0x00001000, secOffset + 8);  // Virtual Size
-  writeUInt32LE(exe, 0x00002000, secOffset + 12); // Virtual Address (RVA 0x2000)
-  writeUInt32LE(exe, 0x00000200, secOffset + 16); // Size of Raw Data
-  writeUInt32LE(exe, 0x00000400, secOffset + 20); // Pointer to Raw Data (0x400)
-  writeUInt32LE(exe, 0xC0000040, secOffset + 36); // INITIALIZED_DATA | READ | WRITE
+  writeUInt32LE(exe, 0x00001000, secOffset + 8, 'Virtual Size')
+  writeUInt32LE(exe, 0x00002000, secOffset + 12, 'Virtual Address (RVA 0x2000)')
+  writeUInt32LE(exe, 0x00000200, secOffset + 16, 'Size of Raw Data')
+  writeUInt32LE(exe, 0x00000400, secOffset + 20, 'Pointer to Raw Data (0x400)')
+  writeUInt32LE(exe, 0xC0000040, secOffset + 36, 'INITIALIZED_DATA | READ | WRITE')
 
   // --- 5. SEKCJA KODU .text (Raw = 0x200, RVA = 0x1000) ---
   // Definiujemy docelowe adresy struktur w pamięci (RVA)
@@ -147,35 +138,37 @@ export function generatePrintfExecutable(outputPath) {
 
   // Zapisanie gotowego kodu do pliku
   exe.set(code, 0x200);
-  plikPE.set(code, 0x200);
+  
+
+
 
   // --- 6. SEKCJA IMPORTÓW .idata (Raw = 0x400, RVA = 0x2000) ---
   const idataRaw = 0x400;
 
   // IAT dla kernel32.dll (RVA 0x2000)
-  writeUInt32LE(exe, 0x00002080, idataRaw + 0x00); // Wskaźnik do ExitProcess Hint/Name
+  writeUInt32LE(exe, 0x00002080, idataRaw + 0x00, 'Wskaźnik do ExitProcess Hint/Name')
   // 0x08 - 0x0F: NULL Terminator dla kernel32
 
   // IAT dla msvcrt.dll (RVA 0x2010)
-  writeUInt32LE(exe, 0x00002094, idataRaw + 0x10); // Wskaźnik do printf Hint/Name
+  writeUInt32LE(exe, 0x00002094, idataRaw + 0x10, 'Wskaźnik do printf Hint/Name')
   // 0x18 - 0x1F: NULL Terminator dla msvcrt
 
   // Import Directory Table (RVA 0x2020)
   const dirOff = idataRaw + 0x20;
   
   // Wpis 1: kernel32.dll
-  writeUInt32LE(exe, 0x00002060, dirOff + 0);  // ILT RVA
-  writeUInt32LE(exe, 0x000020A0, dirOff + 12); // Nazwa DLL RVA ("kernel32.dll")
-  writeUInt32LE(exe, 0x00002000, dirOff + 16); // IAT RVA
+  writeUInt32LE(exe, 0x00002060, dirOff + 0, 'ILT RVA')
+  writeUInt32LE(exe, 0x000020A0, dirOff + 12, 'Nazwa DLL RVA ("kernel32.dll")')
+  writeUInt32LE(exe, 0x00002000, dirOff + 16, 'IAT RVA')
 
   // Wpis 2: msvcrt.dll
-  writeUInt32LE(exe, 0x00002070, dirOff + 20); // ILT RVA
-  writeUInt32LE(exe, 0x000020AD, dirOff + 32); // Nazwa DLL RVA ("msvcrt.dll")
-  writeUInt32LE(exe, 0x00002010, dirOff + 36); // IAT RVA
+  writeUInt32LE(exe, 0x00002070, dirOff + 20, 'ILT RVA')
+  writeUInt32LE(exe, 0x000020AD, dirOff + 32, 'Nazwa DLL RVA ("msvcrt.dll")')
+  writeUInt32LE(exe, 0x00002010, dirOff + 36, 'IAT RVA')
 
   // ILT (Kopie tabel IAT)
-  writeUInt32LE(exe, 0x00002080, idataRaw + 0x60); // kernel32 ILT 
-  writeUInt32LE(exe, 0x00002094, idataRaw + 0x70); // msvcrt ILT   
+  writeUInt32LE(exe, 0x00002080, idataRaw + 0x60, 'kernel32 ILT')
+  writeUInt32LE(exe, 0x00002094, idataRaw + 0x70, 'msvcrt ILT')
 
   // --- STRINGS, HINTS & NAMES ---
   const enc = new TextEncoder();
@@ -189,19 +182,65 @@ export function generatePrintfExecutable(outputPath) {
   // Tekst przekazywany do printf (0x0A to nowa linia \n)
   exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);   // RVA 0x20C0
 
-  //const enc = new TextEncoder();
+
+  function uint8ToHexText(arr) {
+      let out = "";
+      for (let i = 0; i < arr.length; i++) {
+          out += arr[i].toString(16).padStart(2, "0").toUpperCase();
+      }
+      return out;
+  }
+
+  let hex = uint8ToHexText(exe)
+
+  // Posortuj FORMAT po pozycji bajtów
+  FORMAT.sort((a, b) => a.from - b.from)
+
+  // Wydrukuj hex ciągiem z liniami dla FORMAT ranges
+  let txt = ''
+  let lastOFFSET = 0
+  for (const FR of FORMAT) {
+    // Hex PRZED FORMAT range
+    txt += hex.slice(lastOFFSET * 2, FR.from * 2)
+    txt += '\n'
+    // Hex w FORMAT range z komentarzem
+    txt += hex.slice(FR.from * 2, (FR.to + 1) * 2)
+    if (FR.comment) {
+      txt += '    ;' + FR.comment
+    }
+    txt += '\n'
+    lastOFFSET = FR.to + 1
+  }
+  // Pozostały hex na koniec
+  txt += hex.slice(lastOFFSET * 2)
+
+  fs.writeFileSync('pe64.txt', txt)
+
+  // Porównanie heksów
+  console.log(`txt.length: ${txt.length}`)
+  let txtClean = txt.replace(/;[^\n]*/g, '').replace(/\s+/g, '')  // Komentarze PIERWSZA
+  let exeHex = uint8ToHexText(exe)
   
-  plikPE.set(enc.encode('\0\0ExitProcess\0'), idataRaw + 0x80); // RVA 0x2080
-  plikPE.set(enc.encode('\0\0printf\0'), idataRaw + 0x94);      // RVA 0x2094
-
-  plikPE.set(enc.encode('kernel32.dll\0'), idataRaw + 0xA0);    // RVA 0x20A0
-  plikPE.set(enc.encode('msvcrt.dll\0'), idataRaw + 0xAD);      // RVA 0x20AD
-
-  // Tekst przekazywany do printf (0x0A to nowa linia \n)
-  plikPE.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);   // RVA 0x20C0
+  console.log(`FORMAT elements: ${FORMAT.length}`)
+  console.log(`txtClean.length: ${txtClean.length}`)
+  console.log(`exeHex.length: ${exeHex.length}`)
+  
+  if (txtClean === exeHex) {
+    console.log('✓ Heksy się zgadzają!')
+  } else {
+    console.log('✗ Heksy się NIE zgadzają!')
+    // Znajdź pierwszą różnicę
+    for (let i = 0; i < Math.min(txtClean.length, exeHex.length); i++) {
+      if (txtClean[i] !== exeHex[i]) {
+        console.log(`Pierwsza różnica na pozycji ${i}`)
+        console.log(`pe64.txt: ${txtClean.substring(Math.max(0, i-20), i+20)}`)
+        console.log(`exe:      ${exeHex.substring(Math.max(0, i-20), i+20)}`)
+        break
+      }
+    }
+  }
 
   fs.writeFileSync(outputPath, exe);
-  fs.writeFileSync('pe64.exe', plikPE);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
 }
 
