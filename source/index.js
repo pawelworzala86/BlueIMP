@@ -113,7 +113,7 @@ lines.map(line=>{
     const instruction = line.trim().split(/\s+/)[0]
     let parameters = line.replace(instruction,'').trim().split(',')
         .map(p=>p.trim())
-    console.log(instruction,parameters)
+    //console.log(instruction,parameters)
 
     let result = ''
 
@@ -136,9 +136,14 @@ lines.map(line=>{
         })
         result = parameters.map(formatHex).join(' ')
     }
+    if(instruction=='OFFSET'){
+        OFFSET = Number(parameters[0])
+        return
+    }
     if(instruction.endsWith(':')){
         const name = instruction.substring(0,instruction.length-1)
         ADDR[name] = OFFSET
+        return
     }
     if(result.length==0){
         result = line
@@ -147,6 +152,8 @@ lines.map(line=>{
     OFFSET += result.split(' ').length
     newLines.push(result)
 })
+
+console.log('ADDR',ADDR)
 
 source = newLines.join('\n')
 
