@@ -1,6 +1,8 @@
 const fs = require('fs')
 
-let source = fs.readFileSync('./examples/test.bi').toString()
+let fileName = process.argv[2]
+
+let source = fs.readFileSync('./examples/'+fileName+'.bi').toString()
 
 let lines = source.split('\n').map(l=>l.trim())
 
@@ -148,7 +150,7 @@ lines.map(line=>{
 
 source = newLines.join('\n')
 
-fs.writeFileSync('./examples/test.txt', source)
+fs.writeFileSync('./examples/'+fileName+'.txt', source)
 
 let exeTxt = source.replace(/\ |\n/gm,'')
 
@@ -163,4 +165,4 @@ function hexToUint8Array(hex) {
     return arr;
 }
 
-fs.writeFileSync('./examples/test.exe', hexToUint8Array(exeTxt))
+fs.writeFileSync('./examples/'+fileName+'.exe', hexToUint8Array(exeTxt))
