@@ -1,6 +1,6 @@
 {
-  "name": "black-hole",
-  "version": "0.0.2",
+  "name": "blue-imp",
+  "version": "0.0.3",
   "bin": {
     "black-hole": "source/compile.js"
   },
@@ -23,17 +23,16 @@
     "example": "examples"
   },
   "scripts": {
-    "build": "pkg . --options experimental-modules --output bin/bh.exe"
+    "build": "pkg . --options experimental-modules --output bin/bimp.exe"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pawelworzala86/BlackHole.git"
+    "url": "git+https://github.com/pawelworzala86/BlueIMP.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Paweł Worzała",
   "bugs": {
-    "url": "https://github.com/pawelworzala86/BlackHole/issues"
+    "url": "https://github.com/pawelworzala86/BlueIMP/issues"
   },
-  "homepage": "https://github.com/pawelworzala86/BlackHole#readme"
+  "homepage": "https://github.com/pawelworzala86/BlueIMP#readme"
 }
