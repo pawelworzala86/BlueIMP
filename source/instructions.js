@@ -1,4 +1,4 @@
-const mnemonics = [
+const instructions = [
     { mnemonic: "mov r32, imm32", opcode: "B8 + rd" },
     { mnemonic: "mov r64, imm32", opcode: "B8 + rd" },
     { mnemonic: "mov r/m8, r8", opcode: "88 /r" },
@@ -997,4 +997,4 @@ const mnemonics = [
     { mnemonic: "unpckhpd xmm, xmm/m128", opcode: "66 0F 15 /r" },
 ]
 
-modules.export = mnemonics
+module.exports = instructions
