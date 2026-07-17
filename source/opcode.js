@@ -9,10 +9,12 @@ class OpcodeParser {
         const entry = this.table.find(x => x.mnemonic === mnemonic);
         if (!entry) throw new Error("Unknown instruction: " + mnemonic);
 
-        return this.encodeOpcodePattern(entry.opcode, operands);
+        const bytes = this.encodeOpcodePattern(entry.opcode, operands);
+        return Array.from(bytes).map(b => b.toString(16).padStart(2, '0'));
     }
 
     encodeOpcodePattern(pattern, operands) {
+        pattern = pattern.replace(/\s*\+\s*/g, '+');
         const tokens = pattern.split(/\s+/);
         let out = [];
 
@@ -43,7 +45,7 @@ class OpcodeParser {
                 out.push(...this.encodeImm64(operands));
             }
             else if (t.includes("+")) {
-                out.push(this.encodeOpcodePlus(t, operands));
+                out.push(...this.encodeOpcodePlus(t, operands));
             }
             else {
                 // normal hex byte
@@ -104,6 +106,15 @@ class OpcodeParser {
         return map[reg];
     }
 
+    regWidth(reg) {
+        if (!reg || typeof reg !== 'string') return null;
+        if (/^(rax|rcx|rdx|rbx|rsp|rbp|rsi|rdi|r[89]|r1[0-5])$/.test(reg)) return 64;
+        if (/^(eax|ecx|edx|ebx|esp|ebp|esi|edi|r[89]d|r1[0-5]d)$/.test(reg)) return 32;
+        if (/^(ax|cx|dx|bx|sp|bp|si|di|r[89]w|r1[0-5]w)$/.test(reg)) return 16;
+        if (/^(al|cl|dl|bl|spl|bpl|sil|dil|r[89]b|r1[0-5]b)$/.test(reg)) return 8;
+        return null;
+    }
+
         encodeImm8(operands) {
         return operands.find(x => typeof x === "number") & 0xFF;
     }
@@ -154,17 +165,37 @@ class OpcodeParser {
     }
 
     encodeOpcodePlus(token, operands) {
-        const [baseHex] = token.split("+").map(x => x.trim());
+        const [baseHex, modifier] = token.split("+").map(x => x.trim());
         const base = parseInt(baseHex, 16);
 
-        const reg = this.regIndex(operands[0]);
+        const regOperand = operands.find(x => typeof x === "string");
+        const reg = this.regIndex(regOperand);
         const low3 = reg & 7;
 
-        const rex = this.rex(reg, 0, /*W=*/1); // W=1 dla 64-bit
+        const width = this.regWidth(regOperand);
+        const rex = this.rex(reg, 0, width === 64 ? 1 : 0);
 
         const opcode = base + low3;
+        const out = rex ? [rex, opcode] : [opcode];
 
-        return rex ? [rex, opcode] : [opcode];
+        const imm = operands.find(x => typeof x === "number" || typeof x === "bigint");
+        if (imm !== undefined) {
+            if (modifier === 'rb') {
+                out.push(this.encodeImm8(operands));
+            } else if (modifier === 'rw') {
+                out.push(...this.encodeImm16(operands));
+            } else if (modifier === 'rd') {
+                out.push(...this.encodeImm32(operands));
+            } else if (modifier === 'rq') {
+                if (typeof imm === 'bigint') {
+                    out.push(...this.encodeImm64(operands));
+                } else {
+                    out.push(...this.encodeImm32(operands));
+                }
+            }
+        }
+
+        return out;
     }
 }
 
