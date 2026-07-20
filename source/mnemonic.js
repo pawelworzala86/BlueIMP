@@ -100,4 +100,7 @@ console.log(parseInstruction("push rdi"));
 console.log(parseInstruction("lea rax, [rbx+4]"));
 // "lea r64, m"
 
+console.log(parseInstruction("mov rax, [0x00000000]"));
+//  mov r64, r/m64
+
 module.exports = parseInstruction
