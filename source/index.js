@@ -1,4 +1,5 @@
 const fs = require('fs')
+const parseInstruction = require('./mnemonic.js')
 
 let fileName = process.argv[2]
 
@@ -146,6 +147,17 @@ lines.map(line=>{
         ADDR[name] = OFFSET
         return
     }
+    if(instruction=='hex'){
+        result = line.replace('hex','').trim()
+    }
+
+    if((result.length==0)&&(instruction.length)){
+        console.log('instruction',instruction)
+        const pi = parseInstruction(line)
+        console.log('pi',pi)
+    }
+
+
     if(result.length==0){
         result = line
     }

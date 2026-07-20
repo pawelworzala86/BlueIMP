@@ -99,3 +99,5 @@ console.log(parseInstruction("push rdi"));
 
 console.log(parseInstruction("lea rax, [rbx+4]"));
 // "lea r64, m"
+
+module.exports = parseInstruction
