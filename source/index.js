@@ -43,7 +43,7 @@ function intToHexSigned(value, bytes) {
         .padStart(bytes * 2, "0")
 }
 function numToHex(num,bytes=8){
-    if(num.endsWith('f')||(num.indexOf('.')>-1)){
+    if((num.endsWith('f')||(num.indexOf('.')>-1))&&(parseFloat(num.replace('f','')||(parseFloat(num.replace('f',''))==0)))){
         num = num.replace('f','')
         if(bytes==4){
             return floatToHex32(Number(num))
