@@ -294,7 +294,7 @@ for(RP of REPL){
     if(RP.kind=='addrName'){
         let offset = RP.OFFSET
         console.log('ADDR[RP.name]',ADDR[RP.name])
-        let addr2 = ADDR[RP.name] + RP.add + 1
+        let addr2 = ADDR[RP.name] + RP.add
         console.log('addrName',addr2,toHex(addr2,4))
         writeUInt32LE(u8array, addr2, offset);
     }else{
