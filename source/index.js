@@ -1,12 +1,30 @@
 const fs = require('fs')
 const parseInstruction = require('./mnemonic.js')
 const parser = require('./opcode.js')
+const Prepare = require('./prepare.js')
 
 let fileName = process.argv[2]
 
 let source = fs.readFileSync('./examples/'+fileName+'.bi').toString()
 
+let format = fs.readFileSync('./system/format.bi').toString()
+
+source = format + '\n\n' + source
+
+let prepared = source+' '
+while(prepared!=source){
+    prepared = source
+    source = Prepare(source)
+}
+source = prepared
+fs.writeFileSync('./examples/prepared.bi',prepared)
+
+
 let lines = source.split('\n').map(l=>l.trim())
+
+
+
+
 
 function toHex(num, length) {
     return num.toString(16).toUpperCase().padStart(length*2, "0")
