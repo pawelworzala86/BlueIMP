@@ -552,7 +552,22 @@ function generateExecutable(sourceCode,outputPath) {
       FUNCS[name] = OFFSET
       return ''
     }
-    
+
+    if(ins === 'jmp' && parameters[0] && parameters[0].startsWith('[') && parameters[0].endsWith(']')) {
+      const targetName = parameters[0].slice(1, -1).trim();
+      if(targetName && !targetName.startsWith('0x') && !targetName.startsWith('0X')) {
+        result = 'E9 00 00 00 00'
+        REPL.push({
+          OFFSET,
+          length: 5,
+          name: targetName,
+          addr: OFFSET + 1,
+          local: true,
+        })
+        OFFSET += 5
+        return result
+      }
+    }
 
     //if(INSTR[ins]&&!result.length){
     //  result = INSTR[ins](params)
@@ -596,6 +611,10 @@ function generateExecutable(sourceCode,outputPath) {
         }
         result = code.join(' ')
 
+        if(ins=='jmp'){
+          console.log('CODE:',result)
+        }
+
     }
 
     OFFSET += result.split(' ').length
@@ -606,11 +625,11 @@ function generateExecutable(sourceCode,outputPath) {
   //console.log(importEntries)
 
   let code = SECTIONS.code
-  /*code.replace(/(.*)\:/gm,match=>{
-    const name = match.replace(':','')
+  code.replace(/(.*)\:/gm,match=>{
+    const name = match.replace(':','').trim()
     FUNCS[name] = 0
     return match
-  })*/
+  })
   /*fs.readFileSync('./source/test.asm').toString()/*`sub rsp, 40
     and rsp, -16
 

@@ -83,6 +83,9 @@ function parseInstruction(instr) {
     if((o1=='r64')&&(o2!='r/m64')){
         o1 = 'r/m64'
     }
+    if(o1=='m'){
+        o1 = 'rel32'
+    }
 
     if (o2) return `${mnemonic} ${o1}, ${o2}`;
     return `${mnemonic} ${o1}`;
