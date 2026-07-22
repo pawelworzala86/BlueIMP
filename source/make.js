@@ -547,7 +547,7 @@ function generateExecutable(sourceCode,outputPath) {
       return result
     }
 
-    if(ins[ins.length-1]==':'){
+    if(ins.endsWith(':')){
       const name = ins.trim().replace(':','')
       FUNCS[name] = OFFSET
       return ''
@@ -591,7 +591,7 @@ function generateExecutable(sourceCode,outputPath) {
                 length: code.length,
                 name,
                 addr: OFFSET+(code.length-4),
-                local: code.length==4
+                local: (ins=='jmp')//code.length==4
             })
         }
         result = code.join(' ')
@@ -606,11 +606,11 @@ function generateExecutable(sourceCode,outputPath) {
   //console.log(importEntries)
 
   let code = SECTIONS.code
-  code.replace(/(.*)\:/gm,match=>{
+  /*code.replace(/(.*)\:/gm,match=>{
     const name = match.replace(':','')
     FUNCS[name] = 0
     return match
-  })
+  })*/
   /*fs.readFileSync('./source/test.asm').toString()/*`sub rsp, 40
     and rsp, -16
 
@@ -670,7 +670,7 @@ function generateExecutable(sourceCode,outputPath) {
 
   for(const RP of REPL){
     if(RP.local){
-      const localOffset = FUNCS[RP.name] - RP.OFFSET - 5
+      const localOffset = FUNCS[RP.name] - (RP.OFFSET + RP.length)
       console.log('localOffset',localOffset)
       //process.exit()
       writeInt32LE(code, localOffset, RP.addr)

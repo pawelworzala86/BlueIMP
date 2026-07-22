@@ -1,11 +1,19 @@
 .code
 
-    invoke printf, addr testT
+    invoke printf, addr testDataA
+
+    jmp [funcA]
+
+    invoke printf, addr testDataA
+
+  funcA:
+
+    invoke printf, addr testDataA
 
     invoke ExitProcess
 
 .data
-    testT db 'start',0
+    testDataA db 'start',0
 
 .import
     library kernel32,'KERNEL32.DLL',\
