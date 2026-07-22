@@ -140,7 +140,17 @@ lines.map(line=>{
         result = parameters.map(formatHex).join(' ')
     }
     if(instruction=='OFFSET'){
-        OFFSET = Number(parameters[0])
+        parameters = parameters[0].trim().split(' ')
+        console.log('OFFSET',parameters)
+        if(parameters[0]=='='){
+            OFFSET = Number(parameters[1])
+        }
+        if(parameters[0]=='-='){
+            OFFSET -= Number(parameters[1])
+        }
+        if(parameters[0]=='+='){
+            OFFSET += Number(parameters[1])
+        }
         return
     }
     if(instruction.endsWith(':')){
@@ -194,6 +204,10 @@ console.log('addr',addr,toHex(addr,4))
 console.log('call Printf:',17+6)
 let addr2 = 4112-23
 console.log('addr',addr2,toHex(addr2,4))
+
+console.log('lea helloTxt:',8+7)
+let addr3 = 4288-15//-10
+console.log('addr',addr3,toHex(addr3,4))
 
 console.log('totalOFFSET',totalOFFSET)
 
