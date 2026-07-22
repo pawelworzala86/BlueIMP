@@ -175,8 +175,7 @@ lines.map(line=>{
 
     if((result.length==0)&&(instruction.length)){
         console.log('instruction',instruction)
-        const pi = parseInstruction(line)
-        console.log('...',pi,parameters)
+
         let name
         if(parameters[0].indexOf('[')>-1){
             name = parameters[0].substring(1,parameters[0].length-1)
@@ -186,6 +185,9 @@ lines.map(line=>{
             name = parameters[1].substring(1,parameters[1].length-1)
             parameters[1] = '[0x00000000]'
         }
+
+        const pi = parseInstruction(instruction+' '+(parameters.join(', ')))
+        console.log('...',pi,parameters)
         const code = parser.encode(pi, parameters);
         console.log([...code]);
         if(pi.indexOf('r/m64')>-1){
@@ -193,6 +195,7 @@ lines.map(line=>{
                 OFFSET: totalOFFSET,
                 length: code.length,
                 name,
+                off: OFFSET,
             })
         }
         result = code.join(' ')
@@ -270,7 +273,11 @@ function writeUInt32LE(array, value, offset) {
 for(RP of REPL){
     console.log(RP)
     let offset = RP.OFFSET + (RP.length-4)
-    writeUInt32LE(u8array, 0x00000FF9, offset);
+
+    let addr2 = ADDR[RP.name]-(RP.off+RP.length)
+    console.log('addr',addr2,toHex(addr2,4))
+
+    writeUInt32LE(u8array, addr2, offset);
 }
 
 function uint8ToHexBytes(arr) {
