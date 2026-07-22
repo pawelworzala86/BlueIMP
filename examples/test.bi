@@ -70,19 +70,22 @@ hex 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0
 OFFSET = 0
 
 
+
+
 hex 48 83 EC 28
 hex 48 83 E4 F0
-helloLea:
-;hex 48 8D 0D B1 10 00 00
+
 lea rcx, [helloTxt]
+
 hex 31 C0
-callPrintf:
-;hex FF 15 F9 0F 00 00
+
 call [printf]
+
 hex 31 C9
-callExit:
-;hex FF 15 E1 0F 00 00
+
 call [ExitProcess]
+
+
 
 
 ALIGN 512
