@@ -163,11 +163,13 @@ lines.map(line=>{
         result = line.replace('hex','').trim()
     }
     if(instruction=='ALIGN'){
-        console.log('ALIGN',totalOFFSET)
-        let max = Math.ceil(totalOFFSET/512)*512
-        console.log('max',max)
-        for(let i=totalOFFSET;i<max;i++){
-            result += '00 '
+        const alignValue = Number(parameters[0]) || 1
+        console.log('ALIGN', totalOFFSET, 'to', alignValue)
+        let max = Math.ceil(totalOFFSET / alignValue) * alignValue
+        console.log('max', max)
+        const pad = max - totalOFFSET
+        if (pad > 0) {
+            result = Array(pad).fill('00').join(' ')
         }
     }
 
@@ -191,9 +193,9 @@ lines.map(line=>{
     if(result.length==0){
         result = line
     }
-    totalOFFSET += result.split(' ').length
+    totalOFFSET += result.trim().split(' ').length
 
-    OFFSET += result.split(' ').length
+    OFFSET += result.trim().split(' ').length
     newLines.push(result)
 })
 
