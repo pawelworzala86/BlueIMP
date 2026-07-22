@@ -2,6 +2,8 @@ const fs = require('fs')
 const path = require('path')
 //const { fileURLToPath, pathToFileURL } from 'url'
 const Prepare = require('./prepare.js')
+const parseInstruction = require('./mnemonic.js')
+const parser = require('./opcode.js')
 
 //const __filename = fileURLToPath(import.meta.url).replace('compile\\compile.js','');
 //console.log(__filename);
@@ -373,6 +375,8 @@ function generateExecutable(sourceCode,outputPath) {
 
     let params = asm.replace(/\,/gm,'').trim().split(' ')
     let ins = params[0]
+    let parameters = asm.replace(ins,'').trim().split(',')
+        .map(p=>p.trim())
     
     /*if(asm=='sub rsp, 40'){
       result = '48 83 EC 28'
@@ -450,7 +454,7 @@ function generateExecutable(sourceCode,outputPath) {
           local: true,
         })
     }
-    if(ins=='cmp'){//if(asm=='call [printf]'){
+    /*if(ins=='cmp'){//if(asm=='call [printf]'){
       console.log('cmp = ',params)
       //console.log('FUNCS = ',FUNCS)
       if(FUNCS[params[2].replace(/\[|\]/gm,'')]!==undefined){
@@ -473,7 +477,7 @@ function generateExecutable(sourceCode,outputPath) {
         result = INSTR['cmp'](params)
         console.log(result)
       }
-    }
+    }*/
     if(ins=='je'){//if(asm=='call [printf]'){
       console.log('je = ',params)
       //console.log('FUNCS = ',FUNCS)
@@ -510,7 +514,7 @@ function generateExecutable(sourceCode,outputPath) {
         addr: OFFSET+2,
       })
     }*/
-    if(ins=='mov'){//if(asm=='call [printf]'){
+    /*if(ins=='mov'){//if(asm=='call [printf]'){
       //result = 'FF 15 00 00 00 00'
       let dataName = ''
       if((params[1].indexOf('[')>-1)&&((params[1].indexOf('-')==-1)&&(params[1].indexOf('+')==-1))){
@@ -536,7 +540,7 @@ function generateExecutable(sourceCode,outputPath) {
       }else{
         result = INSTR['mov'](params)
       }
-    }
+    }*/
     if(ins=='ret'){
       result = 'C3'
       OFFSET++
@@ -550,8 +554,47 @@ function generateExecutable(sourceCode,outputPath) {
     }
     
 
-    if(INSTR[ins]&&!result.length){
-      result = INSTR[ins](params)
+    //if(INSTR[ins]&&!result.length){
+    //  result = INSTR[ins](params)
+    //}
+    if((result.length==0)&&(ins.length)){
+        console.log('instruction',ins)
+
+        let name
+        if(parameters[0].indexOf('[')>-1){
+            name = parameters[0].substring(1,parameters[0].length-1)
+            if(!ADDR[name]){
+                parameters[0] = '[0x00000000]'
+            }
+        }
+        if(parameters[1]&&parameters[1].indexOf('[')>-1){
+            name = parameters[1].substring(1,parameters[1].length-1)
+            if(!ADDR[name]){
+                parameters[1] = '[0x00000000]'
+            }
+        }
+
+        
+
+        const pi = parseInstruction(ins+' '+(parameters.join(', ')))
+        console.log('...',pi,parameters)
+        if(pi.indexOf(', imm')>-1){
+            parameters[1] = Number(parameters[1])
+        }
+        console.log('...',pi,parameters)
+        const code = parser.encode(pi, parameters);
+        console.log([...code]);
+        if((pi.indexOf('r/m64')>-1)&&name){
+            REPL.push({
+                //kind: 'addr',
+                OFFSET: OFFSET,
+                length: code.length,
+                name,
+                addr: OFFSET+(code.length-4),
+            })
+        }
+        result = code.join(' ')
+
     }
 
     OFFSET += result.split(' ').length
