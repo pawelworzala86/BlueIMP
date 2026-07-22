@@ -86,6 +86,7 @@ const instructions = [
     { mnemonic: "xor r/m32, imm32", opcode: "81 /6 id" },
     { mnemonic: "xor r/m64, imm32", opcode: "48 81 /6 id" },
     { mnemonic: "xor r32, r32", opcode: "31 /r" },
+    { mnemonic: "xor r/m64, r64", opcode: "48 31 /r" },
 
     { mnemonic: "test r/m8, imm8", opcode: "F6 /0 ib" },
     { mnemonic: "test r/m32, imm32", opcode: "F7 /0 id" },

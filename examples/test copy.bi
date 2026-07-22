@@ -1,14 +1,21 @@
 PE64
 
 
+
+
+
+
 sub rsp, 40
+;and rsp, -16
 
-
+;lea rcx, [helloTxt]
+xor eax, eax
+;call [printf]
 invoke printf, addr helloTxt
 
+xor rax, rax 
+;call [ExitProcess]
 invoke ExitProcess
-
-
 
 
 

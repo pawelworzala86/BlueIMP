@@ -71,24 +71,20 @@ hex 4D 5A 00 00 00 00 00 00 00 00 00
     OFFSET = 0
 
 
-
-
-
-
 sub rsp, 40
-and rsp, -16
 
-lea rcx, [helloTxt]
 
-;hex 31 C0
-xor eax, eax 
+    sub rsp, 40
+    lea rcx, [helloTxt]
+    call [printf]
+    add rsp, 40
 
-call [printf]
+    sub rsp, 40
+    
+    call [ExitProcess]
+    add rsp, 40
 
-;hex 31 C9
-xor ecx, ecx 
 
-call [ExitProcess]
 
 
 
