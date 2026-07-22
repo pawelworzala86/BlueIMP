@@ -109,4 +109,7 @@ console.log(parseInstruction("mov rax, [0x00000000]"));
 console.log(parseInstruction("call [0x00000000]"));
 //  call r/m64
 
+console.log(parseInstruction("lea rcx, [0x00000000]"));
+//  call r64, r/m64
+
 module.exports = parseInstruction

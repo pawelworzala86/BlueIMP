@@ -62,8 +62,27 @@ class OpcodeParser {
         const dstReg = this.regIndex(dst);
         const srcReg = this.regIndex(src);
 
+        // Jeśli drugi operand jest adresem (np. '0x...') — RIP-relative (Mod=00, R/M=101)
+        if (typeof src === 'string' && !this.regWidth(src)) {
+            const address = parseInt(src, 16);
+
+            // reg = dstReg, rm = 101 (RIP-relative)
+            const rex = this.rex(dstReg, 0);
+            const modrm = (0 << 6) | (dstReg << 3) | 5;
+
+            const disp32 = [
+                address & 0xFF,
+                (address >> 8) & 0xFF,
+                (address >> 16) & 0xFF,
+                (address >> 24) & 0xFF
+            ];
+
+            return rex ? [rex, modrm, ...disp32] : [modrm, ...disp32];
+        }
+
+        // Obie strony to rejestry -> Mod = 11
         const rex = this.rex(dstReg, srcReg);
-        const modrm = 0xC0 | (srcReg << 3) | dstReg;
+        const modrm = 0xC0 | ((dstReg & 7) << 3) | (srcReg & 7);
 
         return rex ? [rex, modrm] : [modrm];
     }
@@ -227,5 +246,9 @@ console.log([...code]);
 const code2 = parser.encode("call r/m64", ['0x00000FF9']);
 console.log([...code2]);
 //[ 'ff', 'd0' ]
+
+const code3 = parser.encode("lea r64, r/m64", ['rcx','0x00000000']);
+console.log([...code3]);
+//48 8D 0D 00 00 00 00
 
 module.exports = parser

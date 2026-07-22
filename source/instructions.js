@@ -23,9 +23,9 @@ const instructions = [
 
     { mnemonic: "mov r/m64, imm64", opcode: "48 C7 /0 id" },  // pseudo, imm64 = 8 bytes
 
-    { mnemonic: "lea r16, m", opcode: "8D /r" },
-    { mnemonic: "lea r32, m", opcode: "8D /r" },
-    { mnemonic: "lea r64, m", opcode: "48 8D /r" },
+    { mnemonic: "lea r16, r/m16", opcode: "8D /r" },
+    { mnemonic: "lea r32, r/m32", opcode: "8D /r" },
+    { mnemonic: "lea r64, r/m64", opcode: "48 8D /r" },
 
     { mnemonic: "push r64", opcode: "50 + rq" },
     { mnemonic: "push r/m64", opcode: "FF /6" },
