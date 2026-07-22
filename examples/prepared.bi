@@ -75,16 +75,18 @@ hex 4D 5A 00 00 00 00 00 00 00 00 00
 
 
 
-hex 48 83 EC 28
-hex 48 83 E4 F0
+sub rsp, 40
+and rsp, -16
 
 lea rcx, [helloTxt]
 
-hex 31 C0
+;hex 31 C0
+xor eax, eax 
 
 call [printf]
 
-hex 31 C9
+;hex 31 C9
+xor ecx, ecx 
 
 call [ExitProcess]
 
@@ -105,12 +107,12 @@ hex 00 00 00 00 00 00 00 00 00 00 00 00
 
 hex 60 20 00 00    ;ILT RVA
 hex 00 00 00 00 00 00 00 00
-dd 4096 + kernel32_dll_name ;Nazwa DLL RVA ("kernel32.dll")
+dd 4096 + kernel32_dll_name         ;Nazwa DLL RVA ("kernel32.dll")
 hex 00 20 00 00    ;IAT RVA
 
 hex 70 20 00 00    ;ILT RVA
 hex 00 00 00 00 00 00 00 00
-hex AD 20 00 00    ;Nazwa DLL RVA ("msvcrt.dll")
+dd 4096 + msvcrt_dll_name         ;Nazwa DLL RVA ("msvcrt.dll")
 hex 10 20 00 00    ;IAT RVA
 
 hex 00 00 00 00 00 00 00 00

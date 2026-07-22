@@ -221,11 +221,17 @@ lines.map(line=>{
             }
         }
 
+        
+
         const pi = parseInstruction(instruction+' '+(parameters.join(', ')))
+        console.log('...',pi,parameters)
+        if(pi.indexOf(', imm')>-1){
+            parameters[1] = Number(parameters[1])
+        }
         console.log('...',pi,parameters)
         const code = parser.encode(pi, parameters);
         console.log([...code]);
-        if(pi.indexOf('r/m64')>-1){
+        if((pi.indexOf('r/m64')>-1)&&name){
             REPL.push({
                 kind: 'addr',
                 OFFSET: totalOFFSET,
@@ -235,6 +241,8 @@ lines.map(line=>{
             })
         }
         result = code.join(' ')
+
+        
     }
 
 

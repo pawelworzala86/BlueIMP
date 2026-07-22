@@ -76,6 +76,7 @@ const instructions = [
     { mnemonic: "and r/m8, imm8", opcode: "80 /4 ib" },
     { mnemonic: "and r/m32, imm32", opcode: "81 /4 id" },
     { mnemonic: "and r/m64, imm32", opcode: "48 81 /4 id" },
+    { mnemonic: "and r/m64, imm8", opcode: "48 80 /4 ib" },
 
     { mnemonic: "or r/m8, imm8", opcode: "80 /1 ib" },
     { mnemonic: "or r/m32, imm32", opcode: "81 /1 id" },
@@ -84,6 +85,7 @@ const instructions = [
     { mnemonic: "xor r/m8, imm8", opcode: "80 /6 ib" },
     { mnemonic: "xor r/m32, imm32", opcode: "81 /6 id" },
     { mnemonic: "xor r/m64, imm32", opcode: "48 81 /6 id" },
+    { mnemonic: "xor r32, r32", opcode: "31 /r" },
 
     { mnemonic: "test r/m8, imm8", opcode: "F6 /0 ib" },
     { mnemonic: "test r/m32, imm32", opcode: "F7 /0 id" },

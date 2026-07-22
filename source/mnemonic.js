@@ -80,6 +80,10 @@ function parseInstruction(instr) {
     if (op1 === "m" && op2) o1 = inferMemoryWidth(op1, op2);
     if (op2 === "m" && op1) o2 = inferMemoryWidth(op2, op1);
 
+    if((o1=='r64')&&(o2!='r/m64')){
+        o1 = 'r/m64'
+    }
+
     if (o2) return `${mnemonic} ${o1}, ${o2}`;
     return `${mnemonic} ${o1}`;
 }
