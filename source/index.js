@@ -169,9 +169,13 @@ lines.map(line=>{
 
 console.log('ADDR',ADDR)
 
-console.log('call:',25+6)
+console.log('call Exit:',25+6)
 let addr = 4096-31
 console.log('addr',addr,toHex(addr,4))
+
+console.log('call Printf:',17+6)
+let addr2 = 4112-23
+console.log('addr',addr2,toHex(addr2,4))
 
 console.log('totalOFFSET',totalOFFSET)
 
