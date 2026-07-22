@@ -66,7 +66,10 @@ hex 00 00 00 00 00 00 00 00 00 00 00 00
 hex 40 00 00 C0    ;INITIALIZED_DATA | READ | WRITE
 hex 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
 
+
 OFFSET = 0
+
+
 hex 48 83 EC 28
 hex 48 83 E4 F0
 helloLea:
@@ -77,12 +80,15 @@ callPrintf:
 call [printf]
 hex 31 C9
 callExit:
-hex FF 15 E1 0F 00 00
+;hex FF 15 E1 0F 00 00
+call [ExitProcess]
+
 
 ALIGN 512
-testALIGN_END:
 
 OFFSET = 4096
+
+
 ExitProcess:
 hex 80 20 00 00    ;Wskaźnik do ExitProcess Hint/Name
 hex 00 00 00 00 00 00 00 00 00 00 00 00
@@ -124,5 +130,6 @@ OFFSET -= 11
 helloTxt:
 db 'Hello World!',0
 hex 00
+
 
 ALIGN 512
