@@ -70,12 +70,30 @@ class OpcodeParser {
 
     encodeModRM_fixedReg(reg, operands) {
         const [dst] = operands;
-        const dstReg = this.regIndex(dst);
 
-        const rex = this.rex(reg, dstReg);
-        const modrm = 0xC0 | (reg << 3) | dstReg;
+        // 1. Jeśli operand to nazwa rejestru (np. "rax", "rcx")
+        if (typeof dst === 'string' && this.regWidth(dst)) {
+            const dstReg = this.regIndex(dst);
+            const rex = this.rex(reg, dstReg);
+            const modrm = 0xC0 | (reg << 3) | (dstReg & 7); // Mod = 11 (rejestr)
+            return rex ? [rex, modrm] : [modrm];
+        }
 
-        return rex ? [rex, modrm] : [modrm];
+        // 2. Jeśli operand to adres w pamięci / Liczba / Hex string (np. '0x00000FF9' lub 0xFF9)
+        const address = typeof dst === 'string' ? parseInt(dst, 16) : dst;
+
+        // Mod = 00, R/M = 101 (5) oznacza adresowanie RIP-relative w x86-64
+        const modrm = (0 << 6) | (reg << 3) | 5; // Bajt 0x15 dla reg=2
+        
+        // Obliczamy offset 32-bitowy (Little-Endian)
+        const disp32 = [
+            address & 0xFF,
+            (address >> 8) & 0xFF,
+            (address >> 16) & 0xFF,
+            (address >> 24) & 0xFF
+        ];
+
+        return [modrm, ...disp32];
     }
 
     rex(regR, regB, W = 0) {
@@ -204,8 +222,10 @@ const parser = new OpcodeParser(instructions);
 
 const code = parser.encode("mov r64, imm32", ["rax", 123]);
 console.log([...code]);
+//[ '48', 'b8', '7b', '00', '00', '00' ]
 
 const code2 = parser.encode("call r/m64", ['0x00000FF9']);
 console.log([...code2]);
+//[ 'ff', 'd0' ]
 
 module.exports = parser
