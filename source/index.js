@@ -1,5 +1,6 @@
 const fs = require('fs')
 const parseInstruction = require('./mnemonic.js')
+const parser = require('./opcode.js')
 
 let fileName = process.argv[2]
 
@@ -104,7 +105,7 @@ function hexToLE(hex) {
 
 
 
-
+const REPL = []
 let newLines = []
 let OFFSET = 0
 let totalOFFSET = 0
@@ -154,7 +155,17 @@ lines.map(line=>{
     if((result.length==0)&&(instruction.length)){
         console.log('instruction',instruction)
         const pi = parseInstruction(line)
-        console.log('pi',pi)
+        console.log('...',pi,parameters)
+        const code = parser.encode(pi, parameters);
+        console.log([...code]);
+        if(pi.indexOf('r/m64')>-1){
+            REPL.push({
+                OFFSET: totalOFFSET,
+                length: code.length,
+                name: 'printf'
+            })
+        }
+        result = code.join(' ')
     }
 
 
@@ -167,6 +178,13 @@ lines.map(line=>{
     newLines.push(result)
 })
 
+
+
+
+
+
+
+
 console.log('ADDR',ADDR)
 
 console.log('call Exit:',25+6)
@@ -178,6 +196,11 @@ let addr2 = 4112-23
 console.log('addr',addr2,toHex(addr2,4))
 
 console.log('totalOFFSET',totalOFFSET)
+
+
+
+
+
 
 
 source = newLines.join('\n')
@@ -197,4 +220,27 @@ function hexToUint8Array(hex) {
     return arr;
 }
 
-fs.writeFileSync('./examples/'+fileName+'.exe', hexToUint8Array(exeTxt))
+const u8array = hexToUint8Array(exeTxt)
+
+function writeUInt32LE(array, value, offset) {
+  array[offset] = value & 0xff;
+  array[offset + 1] = (value >> 8) & 0xff;
+  array[offset + 2] = (value >> 16) & 0xff;
+  array[offset + 3] = (value >> 24) & 0xff;
+}
+
+for(RP of REPL){
+    console.log(RP)
+    let offset = RP.OFFSET //+ (RP.length-4) - 2
+    writeUInt32LE(u8array, 0x00000FF9, offset);
+}
+
+function uint8ToHexBytes(arr) {
+    return Array.from(arr, (value) => value.toString(16).padStart(2, "0").toUpperCase());
+}
+
+const hexBytes = uint8ToHexBytes(u8array)
+const hex = hexBytes.join('')
+fs.writeFileSync('./examples/'+fileName+'.repl.txt', hex)
+
+fs.writeFileSync('./examples/'+fileName+'.exe', u8array)

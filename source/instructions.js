@@ -138,7 +138,8 @@ const instructions = [
     { mnemonic: "jmp r/m64", opcode: "FF /4" },
 
     { mnemonic: "call rel32", opcode: "E8 cd" },
-    { mnemonic: "call r/m64", opcode: "FF /2" },
+    //{ mnemonic: "call r/m64", opcode: "FF /2" },
+    { mnemonic: "call r/m64", opcode: "FF 15 id" },
 
     { mnemonic: "ret", opcode: "C3" },
     { mnemonic: "ret imm16", opcode: "C2 iw" },

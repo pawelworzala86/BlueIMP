@@ -42,6 +42,9 @@ function classifyOperand(op) {
 
     // memory operand
     if (/^\[.*\]$/.test(op)) {
+        if(op.length==12){
+            return 'r/m64'
+        }
         return classifyMemory(op);
     }
 
@@ -102,5 +105,8 @@ console.log(parseInstruction("lea rax, [rbx+4]"));
 
 console.log(parseInstruction("mov rax, [0x00000000]"));
 //  mov r64, r/m64
+
+console.log(parseInstruction("call [0x00000000]"));
+//  call r/m64
 
 module.exports = parseInstruction

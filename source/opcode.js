@@ -56,7 +56,7 @@ class OpcodeParser {
         return Uint8Array.from(out);
     }
 
-        encodeModRM(operands) {
+    encodeModRM(operands) {
         const [dst, src] = operands;
 
         const dstReg = this.regIndex(dst);
@@ -204,3 +204,8 @@ const parser = new OpcodeParser(instructions);
 
 const code = parser.encode("mov r64, imm32", ["rax", 123]);
 console.log([...code]);
+
+const code2 = parser.encode("call r/m64", ['0x00000FF9']);
+console.log([...code2]);
+
+module.exports = parser
