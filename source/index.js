@@ -147,19 +147,22 @@ lines.map(line=>{
         }else if(instruction=='db'){
             bytes = 1
         }
-        if(parameters[0].indexOf('+')>-1){
-            console.log('parameters[0]',parameters[0])
-            const [add,name] = parameters[0].split('+').map(t=>t.trim())
-            REPL.push({
-                kind: 'addrName',
-                OFFSET: totalOFFSET,
-                length: 4,
-                name,
-                off: OFFSET,
-                add: Number(add),
-            })
-            parameters[0] = '0'
-        }
+        parameters=parameters.map(parameter=>{
+            if(parameter.indexOf('+')>-1){
+                console.log('parameter',parameter)
+                const [add,name] = parameter.split('+').map(t=>t.trim())
+                REPL.push({
+                    kind: 'addrName',
+                    OFFSET: totalOFFSET,
+                    length: 4,
+                    name,
+                    off: OFFSET,
+                    add: Number(add),
+                })
+                parameter = '0'
+            }
+            return parameter
+        })
         parameters = parameters.map(parameter=>{
             const num = numToHex(parameter,bytes)
             if(num===null){

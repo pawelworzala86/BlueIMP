@@ -94,46 +94,30 @@ ALIGN 512
 OFFSET = 4096
 
 
+dd 0,0,0,4096+kernel_name,4096+kernel_table
+dd 0,0,0,4096+msvcrt_name,4096+msvcrt_table
+dd 0,0,0,0,0
+
+kernel_table:
 ExitProcess:
-hex 80 20 00 00    ;Wskaźnik do ExitProcess Hint/Name
-hex 00 00 00 00 00 00 00 00 00 00 00 00
+ dq 4096+_ExitProcess
+dq 0
+msvcrt_table:
 printf:
-hex 94 20 00 00    ;Wskaźnik do printf Hint/Name
-hex 00 00 00 00 00 00 00 00 00 00 00 00
+ dq 4096+_printf
+dq 0
 
-hex 60 20 00 00    ;ILT RVA
-hex 00 00 00 00 00 00 00 00
-dd 4096 + kernel32_dll_name         ;Nazwa DLL RVA ("kernel32.dll")
-hex 00 20 00 00    ;IAT RVA
+kernel_name:
+ db 'KERNEL32.DLL',0
+msvcrt_name:
+ db 'MSVCRT.DLL',0
 
-hex 70 20 00 00    ;ILT RVA
-hex 00 00 00 00 00 00 00 00
-dd 4096 + msvcrt_dll_name         ;Nazwa DLL RVA ("msvcrt.dll")
-hex 10 20 00 00    ;IAT RVA
-
-hex 00 00 00 00 00 00 00 00
-hex 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-hex 80 20 00 00    ;kernel32 ILT
-hex 00 00 00 00 00 00 00 00 00 00 00 00
-hex 94 20 00 00    ;msvcrt ILT
-hex 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-db 0,0,'ExitProcess',0
-
-hex 00 00 00 00 00 00 
-
-db 0,0,'printf',0
-
-hex 00 00 00 
-
-kernel32_dll_name:
-db 'kernel32.dll',0
-msvcrt_dll_name:
-db 'msvcrt.dll',0
-
-hex 00 00 00 00 00 00 00 00
+_ExitProcess:
+ dw 0
+db 'ExitProcess',0
+_printf:
+ dw 0
+db 'printf',0
 
 
 
