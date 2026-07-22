@@ -190,12 +190,16 @@ lines.map(line=>{
     }
 
 
-    if(result.length==0){
+    if(result.trim().length==0){
         result = line
     }
-    totalOFFSET += result.trim().split(' ').length
 
-    OFFSET += result.trim().split(' ').length
+    const tokenCount = result.trim().length === 0
+        ? 0
+        : result.trim().split(/\s+/).length
+
+    totalOFFSET += tokenCount
+    OFFSET += tokenCount
     newLines.push(result)
 })
 
@@ -256,7 +260,7 @@ function writeUInt32LE(array, value, offset) {
 
 for(RP of REPL){
     console.log(RP)
-    let offset = RP.OFFSET //+ (RP.length-4) - 2
+    let offset = RP.OFFSET + (RP.length-4)
     writeUInt32LE(u8array, 0x00000FF9, offset);
 }
 
