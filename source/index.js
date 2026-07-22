@@ -155,11 +155,20 @@ lines.map(line=>{
     }
     if(instruction.endsWith(':')){
         const name = instruction.substring(0,instruction.length-1)
+        console.log(name+': ',totalOFFSET)
         ADDR[name] = OFFSET
         return
     }
     if(instruction=='hex'){
         result = line.replace('hex','').trim()
+    }
+    if(instruction=='ALIGN'){
+        console.log('ALIGN',totalOFFSET)
+        let max = Math.ceil(totalOFFSET/512)*512
+        console.log('max',max)
+        for(let i=totalOFFSET;i<max;i++){
+            result += '00 '
+        }
     }
 
     if((result.length==0)&&(instruction.length)){
