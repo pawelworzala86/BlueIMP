@@ -129,6 +129,19 @@ lines.map(line=>{
         }else if(instruction=='db'){
             bytes = 1
         }
+        if(parameters[0].indexOf('+')>-1){
+            console.log('parameters[0]',parameters[0])
+            const [add,name] = parameters[0].split('+').map(t=>t.trim())
+            REPL.push({
+                kind: 'addrName',
+                OFFSET: totalOFFSET,
+                length: 4,
+                name,
+                off: OFFSET,
+                add: Number(add),
+            })
+            parameters[0] = '0'
+        }
         parameters = parameters.map(parameter=>{
             const num = numToHex(parameter,bytes)
             if(num===null){
@@ -196,6 +209,7 @@ lines.map(line=>{
         console.log([...code]);
         if(pi.indexOf('r/m64')>-1){
             REPL.push({
+                kind: 'addr',
                 OFFSET: totalOFFSET,
                 length: code.length,
                 name,
@@ -242,7 +256,8 @@ console.log('addr',addr3,toHex(addr3,4))
 
 console.log('totalOFFSET',totalOFFSET)
 
-
+console.log('kernel32_dll_name:',toHex(1024*4+4256,4))
+console.log('1024*4*2:',1024*4*2)
 
 
 
@@ -276,12 +291,20 @@ function writeUInt32LE(array, value, offset) {
 
 for(RP of REPL){
     console.log(RP)
-    let offset = RP.OFFSET + (RP.length-4)
+    if(RP.kind=='addrName'){
+        let offset = RP.OFFSET
+        console.log('ADDR[RP.name]',ADDR[RP.name])
+        let addr2 = ADDR[RP.name] + RP.add + 1
+        console.log('addrName',addr2,toHex(addr2,4))
+        writeUInt32LE(u8array, addr2, offset);
+    }else{
+        let offset = RP.OFFSET + (RP.length-4)
 
-    let addr2 = ADDR[RP.name]-(RP.off+RP.length)
-    console.log('addr',addr2,toHex(addr2,4))
+        let addr2 = ADDR[RP.name]-(RP.off+RP.length)
+        console.log('addr',addr2,toHex(addr2,4))
 
-    writeUInt32LE(u8array, addr2, offset);
+        writeUInt32LE(u8array, addr2, offset);
+    }
 }
 
 function uint8ToHexBytes(arr) {
