@@ -8,7 +8,7 @@ const parser = require('./opcode.js')
 //const __filename = fileURLToPath(import.meta.url).replace('compile\\compile.js','');
 //console.log(__filename);
 
-const getSubInstruction = require('./instructions/sub.js')
+/*const getSubInstruction = require('./instructions/sub.js')
 const getAndInstruction = require('./instructions/and.js')
 const getLeaInstruction = require('./instructions/lea.js')
 const getXorInstruction = require('./instructions/xor.js')
@@ -35,7 +35,7 @@ const INSTR = {
 
   'cmp': getCmpInstruction,
   'je': getJeInstruction,
-}
+}*/
 /*export const INSTR = {};
 
 const files = fs.readdirSync(path.resolve(__filename,'./compile/instructions/')).filter(f => f.endsWith('.js'));
@@ -384,7 +384,7 @@ function generateExecutable(sourceCode,outputPath) {
     //if(asm=='and rsp, -16'){
     //  result = '48 83 E4 F0'
     //}
-    if(ins=='lea'){//(asm=='lea rcx, [hello]'){
+    /*if(ins=='lea'){//(asm=='lea rcx, [hello]'){
       let dataName = ''
       if(params[2].indexOf('[')>-1){
         dataName = params[2].replace(/\[|\]/gm,'')
@@ -397,11 +397,11 @@ function generateExecutable(sourceCode,outputPath) {
         length: result.replace(/\ /gm,'').length/2,
         addr: OFFSET+3,
       })
-    }
+    }*/
     //if(asm=='xor eax, eax'){
     //  result = '31 C0'
     //}
-    if(ins=='call'){//if(asm=='call [printf]'){
+    /*if(ins=='call'){//if(asm=='call [printf]'){
       console.log('call = ',params)
       console.log('FUNCS = ',FUNCS)
       if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
@@ -434,8 +434,8 @@ function generateExecutable(sourceCode,outputPath) {
           addr: OFFSET+2,
         })
       }
-    }
-    if(ins=='jmp'){//if(asm=='call [printf]'){
+    }*/
+    /*if(ins=='jmp'){//if(asm=='call [printf]'){
       console.log('jmp = ',params)
       console.log('FUNCS = ',FUNCS)
       //if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
@@ -453,7 +453,7 @@ function generateExecutable(sourceCode,outputPath) {
           addr: OFFSET+1,
           local: true,
         })
-    }
+    }*/
     /*if(ins=='cmp'){//if(asm=='call [printf]'){
       console.log('cmp = ',params)
       //console.log('FUNCS = ',FUNCS)
@@ -478,7 +478,7 @@ function generateExecutable(sourceCode,outputPath) {
         console.log(result)
       }
     }*/
-    if(ins=='je'){//if(asm=='call [printf]'){
+    /*if(ins=='je'){//if(asm=='call [printf]'){
       console.log('je = ',params)
       //console.log('FUNCS = ',FUNCS)
       if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
@@ -501,7 +501,7 @@ function generateExecutable(sourceCode,outputPath) {
         result = INSTR['je'](params)
         console.log(result)
       }
-    }
+    }*/
     //if(asm=='xor ecx, ecx'){
     //  result = '31 C9'
     //}
@@ -563,13 +563,13 @@ function generateExecutable(sourceCode,outputPath) {
         let name
         if(parameters[0].indexOf('[')>-1){
             name = parameters[0].substring(1,parameters[0].length-1)
-            if(!ADDR[name]){
+            if(!FUNCS[name]){
                 parameters[0] = '[0x00000000]'
             }
         }
         if(parameters[1]&&parameters[1].indexOf('[')>-1){
             name = parameters[1].substring(1,parameters[1].length-1)
-            if(!ADDR[name]){
+            if(!FUNCS[name]){
                 parameters[1] = '[0x00000000]'
             }
         }
@@ -591,6 +591,7 @@ function generateExecutable(sourceCode,outputPath) {
                 length: code.length,
                 name,
                 addr: OFFSET+(code.length-4),
+                local: code.length==4
             })
         }
         result = code.join(' ')
@@ -669,12 +670,12 @@ function generateExecutable(sourceCode,outputPath) {
 
   for(const RP of REPL){
     if(RP.local){
-      const localOffset = FUNCS[RP.name] - RP.offset - 5
+      const localOffset = FUNCS[RP.name] - RP.OFFSET - 5
       console.log('localOffset',localOffset)
       //process.exit()
       writeInt32LE(code, localOffset, RP.addr)
     }else{
-      const ripAfterLea = RVA_TEXT_START + RP.offset + RP.length
+      const ripAfterLea = RVA_TEXT_START + RP.OFFSET + RP.length
       const offsetToUse = ADDR[RP.name] - ripAfterLea
       writeUInt32LE(code, offsetToUse, RP.addr)
     }
