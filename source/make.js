@@ -553,7 +553,7 @@ function generateExecutable(sourceCode,outputPath) {
       return ''
     }
 
-    if(ins === 'jmp' && parameters[0] && parameters[0].startsWith('[') && parameters[0].endsWith(']')) {
+    /*if(ins === 'jmp' && parameters[0] && parameters[0].startsWith('[') && parameters[0].endsWith(']')) {
       const targetName = parameters[0].slice(1, -1).trim();
       if(targetName && !targetName.startsWith('0x') && !targetName.startsWith('0X')) {
         result = 'E9 00 00 00 00'
@@ -567,7 +567,7 @@ function generateExecutable(sourceCode,outputPath) {
         OFFSET += 5
         return result
       }
-    }
+    }*/
 
     //if(INSTR[ins]&&!result.length){
     //  result = INSTR[ins](params)
@@ -578,13 +578,13 @@ function generateExecutable(sourceCode,outputPath) {
         let name
         if(parameters[0].indexOf('[')>-1){
             name = parameters[0].substring(1,parameters[0].length-1)
-            if(!FUNCS[name]){
+            if(FUNCS[name]==undefined){
                 parameters[0] = '[0x00000000]'
             }
         }
         if(parameters[1]&&parameters[1].indexOf('[')>-1){
             name = parameters[1].substring(1,parameters[1].length-1)
-            if(!FUNCS[name]){
+            if(FUNCS[name]==undefined){
                 parameters[1] = '[0x00000000]'
             }
         }
@@ -597,6 +597,14 @@ function generateExecutable(sourceCode,outputPath) {
             parameters[1] = Number(parameters[1])
         }
         console.log('...',pi,parameters)
+
+        if(parameters[0].indexOf('[')>-1){
+            parameters[0] = '0x00000000'
+        }
+        if(parameters[1]&&parameters[1].length&&(parameters[1].indexOf('[')>-1)){
+            parameters[1] = '0x00000000'
+        }
+        console.log(parameters);
         const code = parser.encode(pi, parameters);
         console.log([...code]);
         if((pi.indexOf('r/m64')>-1)&&name){

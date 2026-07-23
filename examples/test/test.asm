@@ -2,10 +2,9 @@
 
     invoke printf, addr testDataA
 
-    jmp [funcA]
-
     invoke printf, addr testDataA
 
+    jmp [funcA]
   funcA:
 
     invoke printf, addr testDataA

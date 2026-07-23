@@ -191,8 +191,15 @@ class OpcodeParser {
     }
 
     encodeRel32(operands) {
-        const rel = operands.find(x => typeof x === "object" && x.rel);
-        const v = rel.offset;
+        const rel = operands.find(x =>
+            (typeof x === "object" && x.rel) ||
+            (typeof x === "string" && x.startsWith("0x"))
+        );
+
+        const v = typeof rel === "string"
+            ? parseInt(rel, 16)
+            : rel.offset;
+
         return [
             v & 0xFF,
             (v >> 8) & 0xFF,
@@ -250,5 +257,9 @@ console.log([...code2]);
 const code3 = parser.encode("lea r64, r/m64", ['rcx','0x00000000']);
 console.log([...code3]);
 //48 8D 0D 00 00 00 00
+
+const code4 = parser.encode("jmp rel32", ['0x00000000']);
+console.log([...code4]);
+//[ 'e9', '00', '00', '00', '00' ]
 
 module.exports = parser
