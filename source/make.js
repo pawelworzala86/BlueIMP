@@ -607,14 +607,14 @@ function generateExecutable(sourceCode,outputPath) {
         console.log(parameters);
         const code = parser.encode(pi, parameters);
         console.log([...code]);
-        if((pi.indexOf('r/m64')>-1)&&name){
+        if(((pi.indexOf('r/m64')>-1)||(pi.indexOf('rel32')>-1))&&name){
             REPL.push({
                 //kind: 'addr',
                 OFFSET: OFFSET,
                 length: code.length,
                 name,
                 addr: OFFSET+(code.length-4),
-                local: (ins=='jmp')//code.length==4
+                local: (ins=='jmp')||(pi.indexOf('rel32')>-1)//code.length==4
             })
         }
         result = code.join(' ')

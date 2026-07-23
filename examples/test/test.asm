@@ -9,21 +9,30 @@ end macro
 
     invoke printf, addr testDataA
 
-    jmp [funcA]
-  funcA:
-
-    rvcall testProc;, addr testT
+    call [testPr]
 
     invoke printf, addr testDataA
 
     invoke ExitProcess
 
-proc testProc; paramA
+testPr:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+
     ;lea rax, [decl1]
     ;mov [rbp-8], rax
 
-    invoke printf, addr testT
-endp
+    ;lea rcx, [testT]
+    ;mov rax, [rcx+0];  [rbp+16]
+
+    invoke printf, addr decl1
+
+    add rsp, 8
+    mov rsp, rbp
+    pop rbp
+
+    ret
 
 .data
     testDataA db 'start',0
