@@ -614,7 +614,7 @@ function generateExecutable(sourceCode,outputPath) {
                 length: code.length,
                 name,
                 addr: OFFSET+(code.length-4),
-                local: (ins=='jmp')||(pi.indexOf('rel32')>-1)//code.length==4
+                local: FUNCS[name]!==undefined,//(ins=='jmp')||(pi.indexOf('rel32')>-1)//code.length==4
             })
         }
         result = code.join(' ')
