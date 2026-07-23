@@ -262,4 +262,9 @@ const code4 = parser.encode("jmp rel32", ['0x00000000']);
 console.log([...code4]);
 //[ 'e9', '00', '00', '00', '00' ]
 
+const code5 = parser.encode("mov r/m64, r64", ['[rbp-8]','rax']);
+console.log([...code5]);
+//
+
+
 module.exports = parser

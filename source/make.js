@@ -598,10 +598,10 @@ function generateExecutable(sourceCode,outputPath) {
         }
         console.log('...',pi,parameters)
 
-        if(parameters[0].indexOf('[')>-1){
+        if((parameters[0].indexOf('[')>-1)&&((parameters[0].indexOf('-')==-1)&&(parameters[0].indexOf('+')==-1))){
             parameters[0] = '0x00000000'
         }
-        if(parameters[1]&&parameters[1].length&&(parameters[1].indexOf('[')>-1)){
+        if(parameters[1]&&((parameters[0].indexOf('-')==-1)&&(parameters[0].indexOf('+')==-1))&&parameters[1].length&&(parameters[1].indexOf('[')>-1)){
             parameters[1] = '0x00000000'
         }
         console.log(parameters);
