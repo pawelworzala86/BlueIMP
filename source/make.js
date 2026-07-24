@@ -8,50 +8,6 @@ const parser = require('./opcode.js')
 //const __filename = fileURLToPath(import.meta.url).replace('compile\\compile.js','');
 //console.log(__filename);
 
-/*const getSubInstruction = require('./instructions/sub.js')
-const getAndInstruction = require('./instructions/and.js')
-const getLeaInstruction = require('./instructions/lea.js')
-const getXorInstruction = require('./instructions/xor.js')
-const getCallInstruction = require('./instructions/call.js')
-const getMovInstruction = require('./instructions/mov.js')
-const getAddInstruction = require('./instructions/add.js')
-const getPopInstruction = require('./instructions/pop.js')
-const getPushInstruction = require('./instructions/push.js')
-
-const getCmpInstruction = require('./instructions/cmp.js')
-const getJeInstruction = require('./instructions/je.js')
-
-
-const INSTR = {
-  'sub': getSubInstruction,
-  'and': getAndInstruction,
-  'lea': getLeaInstruction,
-  'xor': getXorInstruction,
-  'call': getCallInstruction,
-  'mov': getMovInstruction,
-  'add': getAddInstruction,
-  'pop': getPopInstruction,
-  'push': getPushInstruction,
-
-  'cmp': getCmpInstruction,
-  'je': getJeInstruction,
-}*/
-/*export const INSTR = {};
-
-const files = fs.readdirSync(path.resolve(__filename,'./compile/instructions/')).filter(f => f.endsWith('.js'));
-for (const file of files) {
-  const mnemonic = file.replace('.js', '');
-  const modulePath = './compile/instructions/' + file
-  let p = path.resolve(__filename,modulePath)
-  console.log(p)
-  const url = pathToFileURL(p).href;
-  const mod = await import(url)
-  const fn = Object.values(mod).find(v => typeof v === 'function')
-  if(fn){
-    INSTR[mnemonic] = fn
-  }
-}*/
-
 
 
 const sourceFileName = process.argv[2]
@@ -280,17 +236,10 @@ function generateExecutable(sourceCode,outputPath) {
       dataOffset += 8
     }
   }
-  //ADDR.hello = RVA_STRING_HELLO
-  //ADDR.test = RVA_STRING_HELLO+'Hello World!\n\0'.length
 
 
 
   const IAT = []
-    //{ dll: 'kernel32.dll', functions: [{ name: 'ExitProcess' }] },
-    //{ dll: 'msvcrt.dll', functions: [{ name: 'printf' },{ name: 'malloc' }] },
-  //];
-
-  //const imp = {}
 
   function addDLL(name,dll){
       IAT.push({name,dll,functions:[]})
@@ -357,9 +306,6 @@ function generateExecutable(sourceCode,outputPath) {
     nextDllNameRva += dllEntry.dll.length + 1;
   }
 
-  //const RVA_IAT_EXIT_PROCESS = importByName.ExitProcess.iatRva;
-  //const RVA_IAT_PRINTF = importByName.printf.iatRva;
-
   ADDR.ExitProcess = importByName.ExitProcess.iatRva
   ADDR.printf = importByName.printf.iatRva
 
@@ -378,169 +324,6 @@ function generateExecutable(sourceCode,outputPath) {
     let parameters = asm.replace(ins,'').trim().split(',')
         .map(p=>p.trim())
     
-    /*if(asm=='sub rsp, 40'){
-      result = '48 83 EC 28'
-    }*/
-    //if(asm=='and rsp, -16'){
-    //  result = '48 83 E4 F0'
-    //}
-    /*if(ins=='lea'){//(asm=='lea rcx, [hello]'){
-      let dataName = ''
-      if(params[2].indexOf('[')>-1){
-        dataName = params[2].replace(/\[|\]/gm,'')
-        params[2] = '[0x00000000]'
-      }
-      result = INSTR['lea'](params)//'48 8D 0D 00 00 00 00'
-      REPL.push({
-        name: dataName,//'hello',
-        offset: OFFSET,
-        length: result.replace(/\ /gm,'').length/2,
-        addr: OFFSET+3,
-      })
-    }*/
-    //if(asm=='xor eax, eax'){
-    //  result = '31 C0'
-    //}
-    /*if(ins=='call'){//if(asm=='call [printf]'){
-      console.log('call = ',params)
-      console.log('FUNCS = ',FUNCS)
-      if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
-        //result = 'E8 00 00 00 00'
-        let dataName = ''
-        if(params[1].indexOf('0x')==-1){
-          dataName = params[1].replace(/\[|\]/gm,'')
-          params[1] = '[0x00000000]'
-        }
-        result = 'E8 00 00 00 00'//INSTR['call'](params)
-        REPL.push({
-          name: dataName,//'printf',
-          offset: OFFSET,
-          length: result.replace(/\ /gm,'').length/2,
-          addr: OFFSET+1,
-          local: true,
-        })
-      }else{
-        result = 'FF 15 00 00 00 00'
-        let dataName = ''
-        if(params[1].indexOf('[')>-1){
-          dataName = params[1].replace(/\[|\]/gm,'')
-          //params[1] = '[0x00000000]'
-        }
-        //result = INSTR['call'](params)
-        REPL.push({
-          name: dataName,//'printf',
-          offset: OFFSET,
-          length: result.replace(/\ /gm,'').length/2,
-          addr: OFFSET+2,
-        })
-      }
-    }*/
-    /*if(ins=='jmp'){//if(asm=='call [printf]'){
-      console.log('jmp = ',params)
-      console.log('FUNCS = ',FUNCS)
-      //if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
-        //result = 'E8 00 00 00 00'
-        let dataName = ''
-        if(params[1].indexOf('0x')==-1){
-          dataName = params[1].replace(/\[|\]/gm,'')
-          params[1] = '[0x00000000]'
-        }
-        result = 'E9 00 00 00 00'//INSTR['call'](params)
-        REPL.push({
-          name: dataName,//'printf',
-          offset: OFFSET,
-          length: result.replace(/\ /gm,'').length/2,
-          addr: OFFSET+1,
-          local: true,
-        })
-    }*/
-    /*if(ins=='cmp'){//if(asm=='call [printf]'){
-      console.log('cmp = ',params)
-      //console.log('FUNCS = ',FUNCS)
-      if(FUNCS[params[2].replace(/\[|\]/gm,'')]!==undefined){
-        //result = 'E8 00 00 00 00'
-        let dataName = ''
-        if(params[2].indexOf('0x')==-1){
-          dataName = params[2].replace(/\[|\]/gm,'')
-          params[2] = '[0x00000000]'
-        }
-        result = INSTR['cmp'](params)
-        REPL.push({
-          name: dataName,//'printf',
-          offset: OFFSET,
-          length: result.replace(/\ /gm,'').length/2,
-          addr: OFFSET+3,
-          local: true,
-        })
-      }else{
-        //result = 'FF 15 00 00 00 00'
-        result = INSTR['cmp'](params)
-        console.log(result)
-      }
-    }*/
-    /*if(ins=='je'){//if(asm=='call [printf]'){
-      console.log('je = ',params)
-      //console.log('FUNCS = ',FUNCS)
-      if(FUNCS[params[1].replace(/\[|\]/gm,'')]!==undefined){
-        //result = 'E8 00 00 00 00'
-        let dataName = ''
-        if(params[1].indexOf('0x')==-1){
-          dataName = params[1].replace(/\[|\]/gm,'')
-          params[1] = '[0x00000000]'
-        }
-        result = INSTR['je'](params)
-        REPL.push({
-          name: dataName,
-          offset: OFFSET,
-          length: result.replace(/\ /gm,'').length/2,
-          addr: OFFSET+2,
-          local: true,
-        })
-      }else{
-        //result = 'FF 15 00 00 00 00'
-        result = INSTR['je'](params)
-        console.log(result)
-      }
-    }*/
-    //if(asm=='xor ecx, ecx'){
-    //  result = '31 C9'
-    //}
-    /*if(asm=='call [ExitProcess]'){
-      result = 'FF 15 00 00 00 00'
-      REPL.push({
-        name: 'ExitProcess',
-        offset: OFFSET,
-        length: result.replace(/\ /gm,'').length/2,
-        addr: OFFSET+2,
-      })
-    }*/
-    /*if(ins=='mov'){//if(asm=='call [printf]'){
-      //result = 'FF 15 00 00 00 00'
-      let dataName = ''
-      if((params[1].indexOf('[')>-1)&&((params[1].indexOf('-')==-1)&&(params[1].indexOf('+')==-1))){
-        dataName = params[1].replace(/\[|\]/gm,'')
-        params[1] = '[0x00000000]'
-        result = INSTR['mov'](params)
-        REPL.push({
-          name: dataName,//'printf',
-          offset: OFFSET,
-          length: result.replace(/\ /gm,'').length/2,
-          addr: OFFSET+3,
-        })
-      }else if((params[2].indexOf('[')>-1)&&((params[2].indexOf('-')==-1)&&(params[2].indexOf('+')==-1))){
-        dataName = params[2].replace(/\[|\]/gm,'')
-        params[2] = '[0x00000000]'
-        result = INSTR['mov'](params)
-        REPL.push({
-          name: dataName,//'printf',
-          offset: OFFSET,
-          length: result.replace(/\ /gm,'').length/2,
-          addr: OFFSET+3,
-        })
-      }else{
-        result = INSTR['mov'](params)
-      }
-    }*/
     if(ins=='ret'){
       result = 'C3'
       OFFSET++
@@ -553,25 +336,6 @@ function generateExecutable(sourceCode,outputPath) {
       return ''
     }
 
-    /*if(ins === 'jmp' && parameters[0] && parameters[0].startsWith('[') && parameters[0].endsWith(']')) {
-      const targetName = parameters[0].slice(1, -1).trim();
-      if(targetName && !targetName.startsWith('0x') && !targetName.startsWith('0X')) {
-        result = 'E9 00 00 00 00'
-        REPL.push({
-          OFFSET,
-          length: 5,
-          name: targetName,
-          addr: OFFSET + 1,
-          local: true,
-        })
-        OFFSET += 5
-        return result
-      }
-    }*/
-
-    //if(INSTR[ins]&&!result.length){
-    //  result = INSTR[ins](params)
-    //}
     if((result.length==0)&&(ins.length)){
         console.log('instruction',ins)
 
@@ -638,19 +402,7 @@ function generateExecutable(sourceCode,outputPath) {
     FUNCS[name] = 0
     return match
   })
-  /*fs.readFileSync('./source/test.asm').toString()/*`sub rsp, 40
-    and rsp, -16
-
-    lea rax, [hello]
-    mov rcx, rax
-    xor eax, eax
-    
-    call [printf]
-    
-    xor ecx, ecx
-    
-    call [ExitProcess]
-  `*/
+  
   let lines = code.split('\n').map(line=>{
     if(line.length){
       return getHex(line)
@@ -671,24 +423,7 @@ function generateExecutable(sourceCode,outputPath) {
   }
 
   // Szkielet instrukcji assemblera
-  code = hexToU8(code)/*new Uint8Array([
-    0x48, 0x83, 0xEC, 0x28,                         // 0x1000: sub rsp, 40          ; Rezerwacja shadow space i podstawowe wyrównanie
-    0x48, 0x83, 0xE4, 0xF0,                         // 0x1004: and rsp, -16         ; Wymuszenie twardego wyrównania stosu do 16 bajtów
-    
-    // lea rcx, [RIP + offset] -> Załaduj adres format stringu
-    0x48, 0x8D, 0x0D, 0x00, 0x00, 0x00, 0x00,       // 0x1008: lea rcx, [RIP + ?]   ; Miejsce na offset (będzie pod indeksem 0x100B)
-    0x31, 0xC0,                                     // 0x100F: xor eax, eax         ; AL = 0 (brak argumentów XMM)
-    
-    // call [RIP + offset] -> Wywołaj printf z IAT
-    0xFF, 0x15, 0x00, 0x00, 0x00, 0x00,             // 0x1011: call [RIP + ?]       ; Miejsce na offset (będzie pod indeksem 0x1013)
-    
-    // xor ecx, ecx -> Kod wyjścia = 0
-    0x31, 0xC9,                                     // 0x1017: xor ecx, ecx         
-    
-    // call [RIP + offset] -> Wywołaj ExitProcess z IAT
-    0xFF, 0x15, 0x00, 0x00, 0x00, 0x00              // 0x1019: call [RIP + ?]       ; Miejsce na offset (będzie pod indeksem 0x101B)
-  ]);*/
-
+  code = hexToU8(code)
 
 
   console.log(REPL)
@@ -707,38 +442,6 @@ function generateExecutable(sourceCode,outputPath) {
       writeUInt32LE(code, offsetToUse, RP.addr)
     }
   }
-
-  /*function toHexString(bytes) {
-    return Array.from(bytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(' ');
-  }
-  const hex = toHexString(code);
-  fs.writeFileSync('./hex.txt',hex)*/
-
-  // --- DYNAMICZNE OBLICZANIE OFFSETÓW RIP-RELATIVE ---
-  
-  /*// 1. Obliczenie offsetu dla LEA RCX (String "Hello World!\n")
-  // RIP po wykonaniu instrukcji LEA (rozmiar instrukcji to 7 bajtów) = RVA_TEXT_START + 0x08 + 7 = 0x100F
-  const ripAfterLea = RVA_TEXT_START + 0x08 + 7; //OFFSET=8
-  const offsetToHello = ADDR.hello - ripAfterLea;
-  writeUInt32LE(code, offsetToHello, 0x0B);
-
-  // 2. Obliczenie offsetu dla CALL PRINTF
-  // RIP po wykonaniu instrukcji CALL (rozmiar instrukcji to 6 bajtów) = RVA_TEXT_START + 0x11 + 6 = 0x1017
-  const ripAfterPrintf = RVA_TEXT_START + 0x11 + 6;  //OFFSET=0x11 = 17
-  const offsetToPrintf = ADDR.printf - ripAfterPrintf;
-  writeUInt32LE(code, offsetToPrintf, 0x13);
-
-  // 3. Obliczenie offsetu dla CALL EXITPROCESS
-  // RIP po wykonaniu instrukcji CALL (rozmiar instrukcji to 6 bajtów) = RVA_TEXT_START + 0x19 + 6 = 0x101F
-  const ripAfterExit = RVA_TEXT_START + 0x19 + 6;  //OFFSET=0x19 = 25
-  const offsetToExit = ADDR.ExitProcess - ripAfterExit;
-  writeUInt32LE(code, offsetToExit, 0x1B);
-*/
-  // Zapisanie gotowego kodu do pliku
-
-
   
 
 
@@ -785,13 +488,6 @@ function generateExecutable(sourceCode,outputPath) {
 
 
 
-
-
-
-  // --- 6. SEKCJA IMPORTÓW .idata (Raw = 0x400, RVA = 0x2000) ---
-  //const idataRaw = 0x600;
-  //idataRaw = 0
-
   for (const entry of importEntries) {
     writeUInt32LE(exe, entry.hintNameRva, idataRaw + (entry.iatRva - 0x2000));
   }
@@ -826,9 +522,6 @@ function generateExecutable(sourceCode,outputPath) {
     }
   }
 
-  // Tekst przekazywany do printf (0x0A to nowa linia \n)
-  //exe.set(enc.encode('Hello World!\n\0'), idataRaw + 0xC0);
-  //exe.set(enc.encode('test!\n\0'), idataRaw + 0xC0+'Hello World!\n\0'.length);
   dataOffset = 0
   for(const DTA of DATA){
     if(DTA.kind=='db'){
@@ -843,10 +536,6 @@ function generateExecutable(sourceCode,outputPath) {
 
   console.log(0xC0 + dataOffset)
 
-
-
-  //const hex2 = toHexString(exe);
-  //fs.writeFileSync('./exe.txt',hex2)
 
   fs.writeFileSync(outputPath, exe);
   console.log(`[+] Plik wygenerowany pomyślnie: ${outputPath}`);
