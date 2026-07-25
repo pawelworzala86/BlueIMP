@@ -72,17 +72,25 @@ hex 4D 5A 00 00 00 00 00 00 00 00 00
     OFFSET = 0
 
 
+start:
+    sub rsp, 40
+    and rsp, -16 
 
-sub rsp, 40
-and rsp, -16 
+    ;call [funcA]
 
-lea rcx, [helloTxt]
-xor eax, eax
-call [printf]
+    lea rcx, [helloTxt]
+    xor eax, eax
+    call [printf]
 
-xor ecx, ecx
-call [ExitProcess]
+    xor ecx, ecx
+    call [ExitProcess]
 
+
+funcA:
+    lea rcx, [helloTxt]
+    xor eax, eax
+    call [printf]
+  ret
 
 
 ALIGN 512

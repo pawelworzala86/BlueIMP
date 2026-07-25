@@ -193,6 +193,9 @@ lines.map(line=>{
         ADDR[name] = OFFSET
         return
     }
+    if(instruction=='ret'){
+        result = 'c3'
+    }
     if(instruction=='hex'){
         result = line.replace('hex','').trim()
     }
