@@ -98,7 +98,7 @@ function Prepare(code){
             return `push [${param}]`
         })
         return `    ${params.join('\n')}
-    call [${name}]
+    lcall [${name}]
     add rsp, ${params.length*8}`
     })
 
