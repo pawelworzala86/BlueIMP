@@ -78,19 +78,25 @@ start:
 
     lcall [funcA]
 
+    sub rsp, 40
     lea rcx, [helloTxt]
     xor eax, eax
     call [printf]
+    add rsp, 40
 
     xor ecx, ecx
+    sub rsp, 40
     call [ExitProcess]
+    add rsp, 40
 
 
 funcA:
+    sub rsp, 40
     lea rcx, [helloTxt]
     xor eax, eax
     call [printf]
-  ret
+    add rsp, 40
+    ret
 
 
 ALIGN 512

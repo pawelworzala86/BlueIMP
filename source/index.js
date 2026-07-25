@@ -227,7 +227,7 @@ lines.map(line=>{
             length: result.split(' ').length,
             name,
             off: OFFSET,
-            add: 1,
+            add: 0,
         })
     }
 
@@ -350,9 +350,9 @@ function writeUInt32LE(array, value, offset) {
 for(RP of REPL){
     console.log(RP)
     if(RP.kind=='addrName'){
-        let offset = RP.OFFSET
+        let offset = RP.OFFSET + 1
         console.log('ADDR[RP.name]',ADDR[RP.name])
-        let addr2 = ( ADDR[RP.name] ) + RP.add
+        let addr2 = ADDR[RP.name] - (RP.off + RP.length)
         console.log('addrName',addr2,toHex(addr2,4))
         writeUInt32LE(u8array, addr2, offset);
     }else{
