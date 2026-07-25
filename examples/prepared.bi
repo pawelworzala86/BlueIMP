@@ -70,25 +70,23 @@ hex 4D 5A 00 00 00 00 00 00 00 00 00
     
     OFFSET = 0
 
-;hex 48 83 EC 28
+
+
 sub rsp, 40
-;hex 48 83 E4 F0
 and rsp, -16 
 
-;hex 48 8D 0D B7 10 00 00
 lea rcx, [helloTxt]
-;hex 31 C0
 xor eax, eax
-;hex FF 15 60 10 00 00 
 call [printf]
-;hex 31 C9
+
 xor ecx, ecx
-;hex FF 15 1D 10 00 00
 call [ExitProcess]
+
 
 
 ALIGN 512
 OFFSET = 4096
+
 
 
 hex 4C 20 00 00    ;OriginalFirstThunk (ILT) dla kernel32.dll
