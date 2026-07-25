@@ -189,7 +189,7 @@ lines.map(line=>{
     }
     if(instruction.endsWith(':')){
         const name = instruction.substring(0,instruction.length-1)
-        console.log(name+': ',totalOFFSET)
+        console.log(name+': ',toHex(OFFSET))
         ADDR[name] = OFFSET
         return
     }
@@ -268,7 +268,7 @@ lines.map(line=>{
 
 
 
-
+/*
 console.log('ADDR',ADDR)
 
 console.log('call Exit:',25+6)
@@ -288,8 +288,9 @@ console.log('totalOFFSET',totalOFFSET)
 console.log('kernel32_dll_name:',toHex(1024*4+4256,4))
 console.log('1024*4*2:',1024*4*2)
 
+console.log('ExitProcess:',toHex(4156,4))
 
-
+*/
 
 
 source = newLines.join('\n')
