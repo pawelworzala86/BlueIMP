@@ -5,7 +5,7 @@ start:
     sub rsp, 40
     and rsp, -16 
 
-    ;call [funcA]
+    lcall [funcA]
 
     lea rcx, [helloTxt]
     xor eax, eax

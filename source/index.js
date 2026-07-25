@@ -20,6 +20,14 @@ source = prepared
 fs.writeFileSync('./examples/prepared.bi',prepared)
 
 
+const FUNCS = {}
+source.replace(/([\S]+)\:/gm,match=>{
+    let name = match.replace(':','').trim()
+    FUNCS[name] = ''
+    return match
+})
+
+
 let lines = source.split('\n').map(l=>l.trim())
 
 
@@ -209,6 +217,19 @@ lines.map(line=>{
             result = Array(pad).fill('00').join(' ')
         }
     }
+    let name = parameters[0].substring(1,parameters[0].length-1)
+    if((instruction=='lcall')&&(FUNCS[name]!=undefined)){
+        console.log('instruction',instruction)
+        result = 'e8 00 00 00 00'
+        REPL.push({
+            kind: 'addrName',
+            OFFSET: totalOFFSET,
+            length: result.split(' ').length,
+            name,
+            off: OFFSET,
+            add: 1,
+        })
+    }
 
     if((result.length==0)&&(instruction.length)){
         console.log('instruction',instruction)
@@ -229,11 +250,15 @@ lines.map(line=>{
 
         
 
-        const pi = parseInstruction(instruction+' '+(parameters.join(', ')))
+        let pi = parseInstruction(instruction+' '+(parameters.join(', ')))
         console.log('...',pi,parameters)
         if(pi.indexOf(', imm')>-1){
             parameters[1] = Number(parameters[1])
         }
+        /*if(pi.indexOf(' m')>-1){
+            pi = pi.replace(' m', ' rel32')
+            parameters[0] = '[0x00000000]'
+        }*/
         console.log('...',pi,parameters)
         const code = parser.encode(pi, parameters);
         console.log([...code]);
@@ -327,7 +352,7 @@ for(RP of REPL){
     if(RP.kind=='addrName'){
         let offset = RP.OFFSET
         console.log('ADDR[RP.name]',ADDR[RP.name])
-        let addr2 = ADDR[RP.name] + RP.add
+        let addr2 = ( ADDR[RP.name] ) + RP.add
         console.log('addrName',addr2,toHex(addr2,4))
         writeUInt32LE(u8array, addr2, offset);
     }else{

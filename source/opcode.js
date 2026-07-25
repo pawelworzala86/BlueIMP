@@ -187,12 +187,24 @@ class OpcodeParser {
 
     encodeRel8(operands) {
         const rel = operands.find(x => typeof x === "object" && x.rel);
-        return rel.offset & 0xFF;
+        if (rel) return rel.offset & 0xFF;
+
+        const val = operands.find(x => typeof x === "number" || typeof x === "string");
+        const num = typeof val === "string" ? parseInt(val, 16) : val;
+        return num & 0xFF;
     }
 
     encodeRel32(operands) {
         const rel = operands.find(x => typeof x === "object" && x.rel);
-        const v = rel.offset;
+        let v;
+
+        if (rel) {
+            v = rel.offset;
+        } else {
+            const val = operands.find(x => typeof x === "number" || typeof x === "string");
+            v = typeof val === "string" ? parseInt(val, 16) : val;
+        }
+
         return [
             v & 0xFF,
             (v >> 8) & 0xFF,
@@ -249,6 +261,10 @@ console.log([...code2]);
 
 const code3 = parser.encode("lea r64, r/m64", ['rcx','0x00000000']);
 console.log([...code3]);
+//48 8D 0D 00 00 00 00
+
+const code4 = parser.encode("call rel32", ['0x00000000']);
+console.log([...code4]);
 //48 8D 0D 00 00 00 00
 
 module.exports = parser
