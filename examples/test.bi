@@ -86,6 +86,6 @@ hex 00
 hex 6D 73 76 63 72 74 2E 64 6C 6C 00 
 
 helloTxt:
-hex 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0A 00
+db 'HelloWorld!',0
 
 ALIGN 512
