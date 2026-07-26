@@ -60,7 +60,9 @@ hex 5C 20 00 00    ;ILT Entry: kernel32.dll!ExitProcess
 hex 00 00 00 00
 hex 00 00 00 00    ;ILT NULL Terminator dla kernel32.dll
 
-hex 00 00 00 00 00 00 45 78 69 74 50 72 6F 63 65 73 73 00 6B 65 72 6E 65 6C 33 32 2E 64 6C 6C 00
+hex 00 00 00 00 00 00 
+hex 45 78 69 74 50 72 6F 63 65 73 73 00 
+hex 6B 65 72 6E 65 6C 33 32 2E 64 6C 6C 00
 
 printf:
 hex A7 20 00 00    ;IAT Entry: msvcrt.dll!printf
@@ -76,7 +78,12 @@ hex B1 20 00 00    ;ILT Entry: msvcrt.dll!malloc
 hex 00 00 00 00
 hex 00 00 00 00    ;ILT NULL Terminator dla msvcrt.dll
 
-hex 00 00 00 00 00 00 70 72 69 6E 74 66 00 00 00 00 6D 61 6C 6C 6F 63 00 00 6D 73 76 63 72 74 2E 64 6C 6C 00 
+hex 00 00 00 00 00 00 
+hex 70 72 69 6E 74 66 00 
+hex 00 00 00 
+hex 6D 61 6C 6C 6F 63 00 
+hex 00 
+hex 6D 73 76 63 72 74 2E 64 6C 6C 00 
 
 helloTxt:
 hex 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0A 00
