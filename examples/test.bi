@@ -54,12 +54,15 @@ dd 0    ;Null Import Descriptor
 
 kernel32_iat:
 ExitProcess:
-hex 5C 20 00 00    ;IAT Entry: kernel32.dll!ExitProcess
+IAT_kernel32_ExitProcess = 4096 + ExitProcess_name
+dd IAT_kernel32_ExitProcess
+;hex 5C 20 00 00    ;IAT Entry: kernel32.dll!ExitProcess
 hex 00 00 00 00
 hex 00 00 00 00    ;IAT NULL Terminator dla kernel32.dll
 hex 00 00 00 00
 kernel32_ilt:
-hex 5C 20 00 00    ;ILT Entry: kernel32.dll!ExitProcess
+;hex 5C 20 00 00    ;ILT Entry: kernel32.dll!ExitProcess
+dd IAT_kernel32_ExitProcess
 hex 00 00 00 00
 hex 00 00 00 00    ;ILT NULL Terminator dla kernel32.dll
 
@@ -71,17 +74,23 @@ db 'kernel32.dll',0
 
 msvcrt_iat:
 printf:
-hex A7 20 00 00    ;IAT Entry: msvcrt.dll!printf
+IAT_msvcrt_printf = 4096 + printf_name
+dd IAT_msvcrt_printf
+;hex A7 20 00 00    ;IAT Entry: msvcrt.dll!printf
 hex 00 00 00 00
 malloc:
-hex B1 20 00 00    ;IAT Entry: msvcrt.dll!malloc
+IAT_msvcrt_malloc = 4096 + malloc_name
+dd IAT_msvcrt_malloc
+;hex B1 20 00 00    ;IAT Entry: msvcrt.dll!malloc
 hex 00 00 00 00
 hex 00 00 00 00    ;IAT NULL Terminator dla msvcrt.dll
 hex 00 00 00 00
 msvcrt_ilt:
-hex A7 20 00 00    ;ILT Entry: msvcrt.dll!printf
+;hex A7 20 00 00    ;ILT Entry: msvcrt.dll!printf
+dd IAT_msvcrt_printf
 hex 00 00 00 00
-hex B1 20 00 00    ;ILT Entry: msvcrt.dll!malloc
+;hex B1 20 00 00    ;ILT Entry: msvcrt.dll!malloc
+dd IAT_msvcrt_malloc
 hex 00 00 00 00
 hex 00 00 00 00    ;ILT NULL Terminator dla msvcrt.dll
 

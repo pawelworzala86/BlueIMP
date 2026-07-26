@@ -132,6 +132,7 @@ function hexToLE(hex) {
 
 
 const REPL = []
+const DEFINES = {}
 let newLines = []
 let OFFSET = 0
 let totalOFFSET = 0
@@ -146,6 +147,15 @@ lines.map(line=>{
 
     let result = ''
 
+    if((line.indexOf('=')>-1)&&(line.indexOf('OFFSET')==-1)){
+        let [name,params] = line.split('=').map(t=>t.trim())
+        let [off,addrName] = params.split('+').map(t=>t.trim())
+        DEFINES[name]={
+            off:Number(off),addrName
+        }
+        return ''
+    }
+
     if(['db','dw','dd','dq'].includes(instruction)){
         let bytes = 8
         if(instruction=='dd'){
@@ -156,6 +166,17 @@ lines.map(line=>{
             bytes = 1
         }
         parameters=parameters.map(parameter=>{
+            if(DEFINES[parameter]!=undefined){
+                REPL.push({
+                    kind: 'define',
+                    OFFSET: totalOFFSET,
+                    length: 4,
+                    name: parameter,
+                    off: OFFSET,
+                    //add: Number(add),
+                })
+                parameter = '0'
+            }
             if(parameter.indexOf('+')>-1){
                 console.log('parameter',parameter)
                 const [add,name] = parameter.split('+').map(t=>t.trim())
@@ -349,7 +370,15 @@ function writeUInt32LE(array, value, offset) {
 
 for(RP of REPL){
     console.log(RP)
-    if(RP.kind=='addrName'){
+    if(RP.kind=='define'){
+        let offset = RP.OFFSET
+        console.log('DEFINES[RP.name]',DEFINES[RP.name])
+
+        let addr2 = DEFINES[RP.name].off + ADDR[DEFINES[RP.name].addrName] - 2
+        console.log('addrName',addr2,toHex(addr2,4))
+
+        writeUInt32LE(u8array, addr2, offset);
+    }else if(RP.kind=='addrName'){
         let offset = RP.OFFSET + 1
         console.log('ADDR[RP.name]',ADDR[RP.name])
         let addr2 = ADDR[RP.name] - (RP.off + RP.length)
