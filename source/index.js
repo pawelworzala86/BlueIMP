@@ -160,7 +160,7 @@ lines.map(line=>{
                 console.log('parameter',parameter)
                 const [add,name] = parameter.split('+').map(t=>t.trim())
                 REPL.push({
-                    kind: 'addrName',
+                    kind: 'addrRVA',
                     OFFSET: totalOFFSET,
                     length: 4,
                     name,
@@ -353,6 +353,12 @@ for(RP of REPL){
         let offset = RP.OFFSET + 1
         console.log('ADDR[RP.name]',ADDR[RP.name])
         let addr2 = ADDR[RP.name] - (RP.off + RP.length)
+        console.log('addrName',addr2,toHex(addr2,4))
+        writeUInt32LE(u8array, addr2, offset);
+    }else if(RP.kind=='addrRVA'){
+        let offset = RP.OFFSET //+ 1
+        console.log('ADDR[RP.name]',ADDR[RP.name])
+        let addr2 = ADDR[RP.name] + RP.add
         console.log('addrName',addr2,toHex(addr2,4))
         writeUInt32LE(u8array, addr2, offset);
     }else{
