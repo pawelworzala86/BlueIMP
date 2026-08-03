@@ -120,6 +120,7 @@ function pareseMacro(macro){
             }
             activeAST.body.push(then)
             activeAST = then
+            continue
             iff = true
         }
         if(token.value=='macro'){
@@ -155,6 +156,7 @@ function pareseMacro(macro){
         if((token.value=='end')&&(tokens[i+1].value=='if')){
             activeAST = activeAST.parent.parent
             i+=1
+            iff = false
             continue
         }
         if((token.value=='end')&&(tokens[i+1].value=='macro')){
@@ -186,3 +188,40 @@ pareseMacro(macro)
 clearParents(AST)
 fs.writeFileSync('.\\examples\\macro.bi.ast', JSON.stringify(AST,null,4))
 console.log(AST)
+
+
+
+function runMacro(node=AST){
+    for(let i=0; i<node.body.length; i++){
+        let child = node.body[i]
+        if(child.type=='macro'){
+            console.log('macro...',child.name,child.params)
+        }
+        if(child.type=='newLine'){
+            continue
+        }
+        if(child.type=='id'){
+            if(MACRO[child.value]){
+                const params = []
+                while(node.body[++i]&&(node.body[i].type!='newLine')){
+                    if(node.body[i]&&node.body[i].type=='id'){
+                        params.push(node.body[i].value)
+                    }
+                }
+                console.log('call macro...',child.value, params)
+                runMacro(MACRO[child.value])
+                continue
+            }else{
+                console.log('id...',child.value)
+            }
+        }
+        if(child.type=='if'){
+            console.log('if...',child.type)
+            continue
+        }
+        console.log('id...',child.type,child.value)
+    }
+}
+
+
+runMacro()
