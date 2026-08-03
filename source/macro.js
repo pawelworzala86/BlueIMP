@@ -9,6 +9,16 @@ function tokenize(src) {
     while (i < src.length) {
         const c = src[i];
 
+        // new line literal
+        if (/\n/.test(c)) {
+            tokens.push({
+                type: 'newLine',
+                value: '\n'
+            });
+            i++; // skip closing `
+            continue;
+        }
+
         // whitespace
         if (/\s/.test(c)) {
             i++;
@@ -76,6 +86,8 @@ function tokenize(src) {
 
 
 
+const MACRO = {}
+
 const AST = {
     body: [],
 }
@@ -84,16 +96,65 @@ let activeAST = AST
 function pareseMacro(macro){
     let tokens = tokenize(macro);
 
+    let iff = false
     for(let i=0; i<tokens.length; i++){
         let token = tokens[i]
-        if(token.value=='macro'){
+        if(token.value=='if'){
+            let left = tokens[++i].value
+            let operation = tokens[++i].value
+            let right = tokens[++i].value
             let block = {
                 parent: activeAST,
-                type: 'macro',
+                type: 'if',
+                left,
+                operation,
+                right,
                 body: [],
             }
             activeAST.body.push(block)
             activeAST = block
+            let then = {
+                parent: activeAST,
+                type: 'then',
+                body: [],
+            }
+            activeAST.body.push(then)
+            activeAST = then
+            iff = true
+        }
+        if(token.value=='macro'){
+            let name = tokens[++i].value
+            let params = []
+            while(tokens[i++].type!='newLine'){
+                if(tokens[i].type=='id'){
+                    params.push(tokens[i].value)
+                }
+            }
+            let block = {
+                parent: activeAST,
+                type: 'macro',
+                name,
+                params,
+                body: [],
+            }
+            MACRO[name] = block
+            activeAST.body.push(block)
+            activeAST = block
+            i--
+            continue
+        }
+        if(iff&&(token.value=='else')){
+            let elseD = {
+                parent: activeAST,
+                type: 'else',
+                body: [],
+            }
+            activeAST.body.parent.push(elseD)
+            activeAST = elseD
+        }
+        if((token.value=='end')&&(tokens[i+1].value=='if')){
+            activeAST = activeAST.parent.parent
+            i+=1
             continue
         }
         if((token.value=='end')&&(tokens[i+1].value=='macro')){

@@ -2,64 +2,78 @@
     "body": [
         {
             "type": "macro",
+            "name": "TestA",
+            "params": [
+                "propA",
+                "propB"
+            ],
             "body": [
                 {
-                    "type": "id",
-                    "value": "TestA"
+                    "type": "if",
+                    "left": "propB",
+                    "operation": "!=",
+                    "right": "NULL",
+                    "body": [
+                        {
+                            "type": "then",
+                            "body": [
+                                {
+                                    "type": "id",
+                                    "value": "if"
+                                },
+                                {
+                                    "type": "newLine",
+                                    "value": "\n"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "propB:"
+                                },
+                                {
+                                    "type": "newLine",
+                                    "value": "\n"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "  dq 123"
+                                },
+                                {
+                                    "type": "newLine",
+                                    "value": "\n"
+                                }
+                            ]
+                        }
+                    ]
                 },
                 {
-                    "type": "id",
-                    "value": "propA"
-                },
-                {
-                    "type": "op",
-                    "value": ","
-                },
-                {
-                    "type": "id",
-                    "value": "propB"
-                },
-                {
-                    "type": "id",
-                    "value": "if"
-                },
-                {
-                    "type": "id",
-                    "value": "propB"
-                },
-                {
-                    "type": "op",
-                    "value": "!="
-                },
-                {
-                    "type": "id",
-                    "value": "NULL"
-                },
-                {
-                    "type": "literal",
-                    "value": "propB:"
-                },
-                {
-                    "type": "literal",
-                    "value": "  dq 123"
-                },
-                {
-                    "type": "id",
-                    "value": "end"
-                },
-                {
-                    "type": "id",
-                    "value": "if"
+                    "type": "newLine",
+                    "value": "\n"
                 },
                 {
                     "type": "literal",
                     "value": "propA:"
                 },
                 {
+                    "type": "newLine",
+                    "value": "\n"
+                },
+                {
                     "type": "literal",
                     "value": "  dq 100"
+                },
+                {
+                    "type": "newLine",
+                    "value": "\n"
                 }
             ]
+        },
+        {
+            "type": "newLine",
+            "value": "\n"
+        },
+        {
+            "type": "newLine",
+            "value": "\n"
         },
         {
             "type": "id",
