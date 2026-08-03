@@ -215,6 +215,7 @@ function runMacro(node=AST, args=[], paramNames=null){
         let child = node.body[i]
         if(child.type=='macro'){
             console.log('macro...',child.name,child.params)
+            continue
         }
         if(child.type=='newLine'){
             RESULT += '\n'
