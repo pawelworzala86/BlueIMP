@@ -1,0 +1,81 @@
+{
+    "body": [
+        {
+            "type": "macro",
+            "body": [
+                {
+                    "type": "id",
+                    "value": "TestA"
+                },
+                {
+                    "type": "id",
+                    "value": "propA"
+                },
+                {
+                    "type": "op",
+                    "value": ","
+                },
+                {
+                    "type": "id",
+                    "value": "propB"
+                },
+                {
+                    "type": "id",
+                    "value": "if"
+                },
+                {
+                    "type": "id",
+                    "value": "propB"
+                },
+                {
+                    "type": "op",
+                    "value": "!="
+                },
+                {
+                    "type": "id",
+                    "value": "NULL"
+                },
+                {
+                    "type": "literal",
+                    "value": "propB:"
+                },
+                {
+                    "type": "literal",
+                    "value": "  dq 123"
+                },
+                {
+                    "type": "id",
+                    "value": "end"
+                },
+                {
+                    "type": "id",
+                    "value": "if"
+                },
+                {
+                    "type": "literal",
+                    "value": "propA:"
+                },
+                {
+                    "type": "literal",
+                    "value": "  dq 100"
+                }
+            ]
+        },
+        {
+            "type": "id",
+            "value": "TestA"
+        },
+        {
+            "type": "id",
+            "value": "nameA"
+        },
+        {
+            "type": "op",
+            "value": ","
+        },
+        {
+            "type": "id",
+            "value": "nameB"
+        }
+    ]
+}
