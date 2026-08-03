@@ -189,9 +189,21 @@ clearParents(AST)
 fs.writeFileSync('.\\examples\\macro.bi.ast', JSON.stringify(AST,null,4))
 console.log(AST)
 
-
+let DATASET = {}
 let RESULT = ''
-function runMacro(node=AST){
+function runMacro(node=AST, params=[]){
+    function data(value){
+        console.log('data...',value,params)
+        for(let i=0; i<params.length; i++){
+            if(node.params&&node.params[i]&&(value==node.params[i])){
+                return params[i]
+            }
+        }
+        if(DATASET[value]){
+            return DATASET[value]
+        }
+        return value
+    }
     for(let i=0; i<node.body.length; i++){
         let child = node.body[i]
         if(child.type=='macro'){
@@ -203,14 +215,14 @@ function runMacro(node=AST){
         }
         if(child.type=='id'){
             if(MACRO[child.value]){
-                const params = []
+                const params_ = []
                 while(node.body[++i]&&(node.body[i].type!='newLine')){
                     if(node.body[i]&&node.body[i].type=='id'){
-                        params.push(node.body[i].value)
+                        params_.push(node.body[i].value)
                     }
                 }
-                console.log('call macro...',child.value, params)
-                runMacro(MACRO[child.value])
+                console.log('call macro...',child.value, params_)
+                runMacro(MACRO[child.value], params_)
                 i++
                 continue
             }else{
@@ -224,30 +236,30 @@ function runMacro(node=AST){
             let right = child.right
             if(operation=='!='){
                 if(left!=right){
-                    runMacro(child.body[0])
+                    runMacro(child.body[0], params)
                 }else if(child.body[1]){
-                    runMacro(child.body[1])
+                    runMacro(child.body[1], params)
                 }
             }
             if(operation=='>='){
                 if(left>=right){
-                    runMacro(child.body[0])
+                    runMacro(child.body[0], params)
                 }else if(child.body[1]){
-                    runMacro(child.body[1])
+                    runMacro(child.body[1], params)
                 }
             }
             if(operation=='<='){
                 if(left<=right){
-                    runMacro(child.body[0])
+                    runMacro(child.body[0], params)
                 }else if(child.body[1]){
-                    runMacro(child.body[1])
+                    runMacro(child.body[1], params)
                 }
             }
             if(operation=='=='){
                 if(left==right){
-                    runMacro(child.body[0])
+                    runMacro(child.body[0], params)
                 }else if(child.body[1]){
-                    runMacro(child.body[1])
+                    runMacro(child.body[1], params)
                 }
             }
             continue
@@ -256,7 +268,7 @@ function runMacro(node=AST){
         //    RESULT+=child.value+'\n'
         //}
         console.log('id...',child.type,child.value)
-        RESULT+=child.value+' '
+        RESULT+=data(child.value)+' '
     }
 }
 
