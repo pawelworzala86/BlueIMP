@@ -190,7 +190,7 @@ fs.writeFileSync('.\\examples\\macro.bi.ast', JSON.stringify(AST,null,4))
 console.log(AST)
 
 
-
+let RESULT = ''
 function runMacro(node=AST){
     for(let i=0; i<node.body.length; i++){
         let child = node.body[i]
@@ -217,11 +217,25 @@ function runMacro(node=AST){
         }
         if(child.type=='if'){
             console.log('if...',child.type)
+            let left = child.left
+            let operation = child.operation
+            let right = child.right
+            if(operation='!='){
+                if(left!=right){
+                    runMacro(child.body[0])
+                }else if(child.body[1]){
+                    runMacro(child.body[1])
+                }
+            }
             continue
+        }
+        if(child.type=='literal'){
+            RESULT+=child.value+'\n'
         }
         console.log('id...',child.type,child.value)
     }
 }
 
-
 runMacro()
+
+console.log('RESULT:\n',RESULT)
