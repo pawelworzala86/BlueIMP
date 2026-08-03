@@ -191,12 +191,19 @@ console.log(AST)
 
 let DATASET = {}
 let RESULT = ''
-function runMacro(node=AST, params=[]){
+function runMacro(node=AST, args=[], paramNames=null){
+    // if node itself defines params (a macro), prefer them when paramNames not provided
+    if(node && node.params && !paramNames){
+        paramNames = node.params
+    }
+
     function data(value){
-        console.log('data...',value,params)
-        for(let i=0; i<params.length; i++){
-            if(node.params&&node.params[i]&&(value==node.params[i])){
-                return params[i]
+        console.log('data...',value,args)
+        if(paramNames){
+            for(let i=0; i<paramNames.length; i++){
+                if(paramNames[i] && (value==paramNames[i])){
+                    return args[i]
+                }
             }
         }
         if(DATASET[value]){
@@ -222,7 +229,7 @@ function runMacro(node=AST, params=[]){
                     }
                 }
                 console.log('call macro...',child.value, params_)
-                runMacro(MACRO[child.value], params_)
+                runMacro(MACRO[child.value], params_, MACRO[child.value].params)
                 i++
                 continue
             }else{
@@ -235,31 +242,31 @@ function runMacro(node=AST, params=[]){
             let operation = child.operation
             let right = child.right
             if(operation=='!='){
-                if(left!=right){
-                    runMacro(child.body[0], params)
+                if(data(left)!=data(right)){
+                    runMacro(child.body[0], args, paramNames)
                 }else if(child.body[1]){
-                    runMacro(child.body[1], params)
+                    runMacro(child.body[1], args, paramNames)
                 }
             }
             if(operation=='>='){
-                if(left>=right){
-                    runMacro(child.body[0], params)
+                if(data(left)>=data(right)){
+                    runMacro(child.body[0], args, paramNames)
                 }else if(child.body[1]){
-                    runMacro(child.body[1], params)
+                    runMacro(child.body[1], args, paramNames)
                 }
             }
             if(operation=='<='){
-                if(left<=right){
-                    runMacro(child.body[0], params)
+                if(data(left)<=data(right)){
+                    runMacro(child.body[0], args, paramNames)
                 }else if(child.body[1]){
-                    runMacro(child.body[1], params)
+                    runMacro(child.body[1], args, paramNames)
                 }
             }
             if(operation=='=='){
-                if(left==right){
-                    runMacro(child.body[0], params)
+                if(data(left)==data(right)){
+                    runMacro(child.body[0], args, paramNames)
                 }else if(child.body[1]){
-                    runMacro(child.body[1], params)
+                    runMacro(child.body[1], args, paramNames)
                 }
             }
             continue
