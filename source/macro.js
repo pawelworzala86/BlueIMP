@@ -198,6 +198,7 @@ function runMacro(node=AST){
             console.log('macro...',child.name,child.params)
         }
         if(child.type=='newLine'){
+            RESULT += '\n'
             continue
         }
         if(child.type=='id'){
@@ -210,6 +211,7 @@ function runMacro(node=AST){
                 }
                 console.log('call macro...',child.value, params)
                 runMacro(MACRO[child.value])
+                i++
                 continue
             }else{
                 console.log('id...',child.value)
@@ -220,8 +222,29 @@ function runMacro(node=AST){
             let left = child.left
             let operation = child.operation
             let right = child.right
-            if(operation='!='){
+            if(operation=='!='){
                 if(left!=right){
+                    runMacro(child.body[0])
+                }else if(child.body[1]){
+                    runMacro(child.body[1])
+                }
+            }
+            if(operation=='>='){
+                if(left>=right){
+                    runMacro(child.body[0])
+                }else if(child.body[1]){
+                    runMacro(child.body[1])
+                }
+            }
+            if(operation=='<='){
+                if(left<=right){
+                    runMacro(child.body[0])
+                }else if(child.body[1]){
+                    runMacro(child.body[1])
+                }
+            }
+            if(operation=='=='){
+                if(left==right){
                     runMacro(child.body[0])
                 }else if(child.body[1]){
                     runMacro(child.body[1])
@@ -229,10 +252,11 @@ function runMacro(node=AST){
             }
             continue
         }
-        if(child.type=='literal'){
-            RESULT+=child.value+'\n'
-        }
+        //if(child.type=='literal'){
+        //    RESULT+=child.value+'\n'
+        //}
         console.log('id...',child.type,child.value)
+        RESULT+=child.value+' '
     }
 }
 

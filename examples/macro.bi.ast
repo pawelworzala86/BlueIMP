@@ -22,16 +22,24 @@
                                     "value": "\n"
                                 },
                                 {
-                                    "type": "literal",
-                                    "value": "propB:"
+                                    "type": "id",
+                                    "value": "propB"
+                                },
+                                {
+                                    "type": "op",
+                                    "value": ":"
                                 },
                                 {
                                     "type": "newLine",
                                     "value": "\n"
                                 },
                                 {
-                                    "type": "literal",
-                                    "value": "  dq 123"
+                                    "type": "id",
+                                    "value": "dq"
+                                },
+                                {
+                                    "type": "num",
+                                    "value": "123"
                                 },
                                 {
                                     "type": "newLine",
@@ -46,16 +54,24 @@
                     "value": "\n"
                 },
                 {
-                    "type": "literal",
-                    "value": "propA:"
+                    "type": "id",
+                    "value": "propA"
+                },
+                {
+                    "type": "op",
+                    "value": ":"
                 },
                 {
                     "type": "newLine",
                     "value": "\n"
                 },
                 {
-                    "type": "literal",
-                    "value": "  dq 100"
+                    "type": "id",
+                    "value": "dq"
+                },
+                {
+                    "type": "num",
+                    "value": "100"
                 },
                 {
                     "type": "newLine",
