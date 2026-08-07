@@ -417,3 +417,5 @@ fs.writeFileSync('./examples/'+fileName+'.repl.txt', hex)
 fs.writeFileSync('./examples/'+fileName+'.exe', u8array)
 
 fs.writeFileSync('./repls.json', JSON.stringify(REPLS,null,4))
+
+console.log('ADDR',ADDR)
