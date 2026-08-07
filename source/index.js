@@ -159,6 +159,46 @@ function substituteMacroParameters(line, params, args){
     return line
 }
 
+function normalizeValueForCondition(value){
+    if(DATASET[value] !== undefined){
+        value = DATASET[value]
+    }
+    if(typeof value !== 'string'){
+        return value
+    }
+    if(value.endsWith('u') || value.endsWith('i')){
+        return value.slice(0, -1)
+    }
+    return value
+}
+
+function evaluateCondition(left, operation, right){
+    let leftValue = normalizeValueForCondition(data(left))
+    let rightValue = normalizeValueForCondition(data(right))
+
+    const leftNumber = Number(leftValue)
+    const rightNumber = Number(rightValue)
+    const leftIsNumber = !isNaN(leftNumber)
+    const rightIsNumber = !isNaN(rightNumber)
+
+    if(leftIsNumber && rightIsNumber){
+        leftValue = leftNumber
+        rightValue = rightNumber
+    }
+
+    switch(operation){
+        case '==': return leftValue == rightValue
+        case '!=': return leftValue != rightValue
+        case '>=': return leftValue >= rightValue
+        case '<=': return leftValue <= rightValue
+        case '>': return leftValue > rightValue
+        case '<': return leftValue < rightValue
+        default: return false
+    }
+}
+
+
+
 
 
 const REPL = []
@@ -172,6 +212,28 @@ const MACRO = {}
 let activeMacros = null
 
 DATASET['OFFSET'] = 0
+
+
+
+
+
+function data(name){
+    if(name === undefined || name === null){
+        return name
+    }
+    if(DATASET[name] !== undefined){
+        return resolveDataSetValue(DATASET[name])
+    }else{
+        return name
+    }
+    /*if(typeof name === 'string' && /^[A-Za-z_][A-Za-z0-9_]*$/.test(name)){
+        throw new Error(`Unknown identifier: ${name}`)
+    }*/
+    return name
+}
+
+
+
 
 for(let index=0;index<lines.length;index++){
     let line = lines[index]
@@ -210,6 +272,7 @@ for(let index=0;index<lines.length;index++){
                 lines[index] = ''
             }
             lines[index] = ''
+            console.log(query)
             let [op,left,operation,right] = /([a-zA-Z0-9\_]+)(\=\=|\!\=|\=|\>\=|\<\=)([a-zA-Z0-9\_]+)/.exec(query)
             let iff = {
                 left,operation,right,
@@ -243,6 +306,10 @@ for(let index=0;index<lines.length;index++){
     function parseLine(line){
         let result = ''
 
+        if(typeof line=='object'){
+            return line.invoke().map(parseLine)
+        }
+
         line = line.replace(/\;.*/gm,'').trim()
 
         /*line = stripComment(line)
@@ -254,10 +321,6 @@ for(let index=0;index<lines.length;index++){
         let [cmd, ...rest] = line.split(/\s+/)
         let restText = rest.join(' ')
         let args = restText.split(',').map(a=>a.trim()).filter(a=>a.length>0)
-
-        if(typeof line=='object'){
-            return line.invoke().map(parseLine)
-        }
 
         const instruction = line.trim().split(/\s+/)[0]
         let parameters = line.replace(instruction,'').trim().split(',')

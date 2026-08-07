@@ -1,5 +1,5 @@
 macro TestA propA, propB
-    if propB != NULL
+    if propB!=NULL
         propB:
           dq 123
     end if
