@@ -1,5 +1,6 @@
-macro PE64
-    hex 4D 5A 00 00 00 00 00 00 00 00 00
+
+
+hex 4D 5A 00 00 00 00 00 00 00 00 00
     hex 00 00 00 00    ;RIP-rel offset do "Hello World!"
     hex 00 00 00 00
     hex 00 00 00 00    ;RIP-rel offset do IAT.printf
@@ -69,9 +70,6 @@ macro PE64
     hex 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
     
     OFFSET = 0
-end macro
-
-PE64
 
 
 start:
