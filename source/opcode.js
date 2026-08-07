@@ -62,9 +62,10 @@ class OpcodeParser {
         const dstReg = this.regIndex(dst);
         const srcReg = this.regIndex(src);
 
-        // Jeśli drugi operand jest adresem (np. '0x...') — RIP-relative (Mod=00, R/M=101)
+        // Jeśli drugi operand jest adresem (np. '0x...' lub '[0x...]') — RIP-relative (Mod=00, R/M=101)
         if (typeof src === 'string' && !this.regWidth(src)) {
-            const address = parseInt(src, 16);
+            const normalized = src.replace(/^\[|\]$/g, '')
+            const address = parseInt(normalized, 16) || 0;
 
             // reg = dstReg, rm = 101 (RIP-relative)
             const rex = this.rex(dstReg, 0);
@@ -152,17 +153,34 @@ class OpcodeParser {
         return null;
     }
 
-        encodeImm8(operands) {
-        return operands.find(x => typeof x === "number") & 0xFF;
+        parseImmediateValue(operands) {
+        const numericOperand = operands.find(x => typeof x === "number" || typeof x === "bigint");
+        if (numericOperand !== undefined) {
+            return typeof numericOperand === "number" ? numericOperand : Number(numericOperand);
+        }
+
+        const stringOperand = operands.find(x => typeof x === "string" && /^(-?\d+|0x[0-9a-fA-F]+|-?\d+u|-?\d+i)$/.test(x));
+        if (stringOperand !== undefined) {
+            if (/^0x[0-9a-fA-F]+$/.test(stringOperand)) return parseInt(stringOperand, 16);
+            if (/^-?\d+$/.test(stringOperand)) return parseInt(stringOperand, 10);
+            if (/^-?\d+u$/.test(stringOperand)) return parseInt(stringOperand.replace(/u$/, ''), 10);
+            if (/^-?\d+i$/.test(stringOperand)) return parseInt(stringOperand.replace(/i$/, ''), 10);
+        }
+
+        return 0;
+    }
+
+    encodeImm8(operands) {
+        return this.parseImmediateValue(operands) & 0xFF;
     }
 
     encodeImm16(operands) {
-        const v = operands.find(x => typeof x === "number");
+        const v = this.parseImmediateValue(operands);
         return [v & 0xFF, (v >> 8) & 0xFF];
     }
 
     encodeImm32(operands) {
-        const v = operands.find(x => typeof x === "number");
+        const v = this.parseImmediateValue(operands);
         return [
             v & 0xFF,
             (v >> 8) & 0xFF,
@@ -172,7 +190,27 @@ class OpcodeParser {
     }
 
     encodeImm64(operands) {
-        const v = BigInt(operands.find(x => typeof x === "bigint"));
+        const val = operands.find(x => typeof x === "bigint" || typeof x === "number" || typeof x === "string");
+        let v;
+        if (typeof val === "bigint") {
+            v = val;
+        } else if (typeof val === "number") {
+            v = BigInt(val);
+        } else if (typeof val === "string") {
+            if (/^0x[0-9a-fA-F]+$/.test(val)) {
+                v = BigInt(val);
+            } else if (/^-?\d+$/.test(val)) {
+                v = BigInt(parseInt(val, 10));
+            } else if (/^-?\d+u$/.test(val)) {
+                v = BigInt(parseInt(val.replace(/u$/, ''), 10));
+            } else if (/^-?\d+i$/.test(val)) {
+                v = BigInt(parseInt(val.replace(/i$/, ''), 10));
+            } else {
+                v = 0n;
+            }
+        } else {
+            v = 0n;
+        }
         return [
             Number(v & 0xFFn),
             Number((v >> 8n) & 0xFFn),
@@ -189,9 +227,7 @@ class OpcodeParser {
         const rel = operands.find(x => typeof x === "object" && x.rel);
         if (rel) return rel.offset & 0xFF;
 
-        const val = operands.find(x => typeof x === "number" || typeof x === "string");
-        const num = typeof val === "string" ? parseInt(val, 16) : val;
-        return num & 0xFF;
+        return this.parseImmediateValue(operands) & 0xFF;
     }
 
     encodeRel32(operands) {
@@ -201,8 +237,7 @@ class OpcodeParser {
         if (rel) {
             v = rel.offset;
         } else {
-            const val = operands.find(x => typeof x === "number" || typeof x === "string");
-            v = typeof val === "string" ? parseInt(val, 16) : val;
+            v = this.parseImmediateValue(operands);
         }
 
         return [

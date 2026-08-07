@@ -1,3 +1,5 @@
+const instructions = require('./instructions.js');
+
 function classifyRegister(reg) {
     reg = reg.toLowerCase();
 
@@ -29,7 +31,10 @@ function classifyMemory(op) {
 }
 
 function classifyOperand(op) {
+    if (typeof op !== 'string') return null;
+
     op = op.trim();
+    if (!op) return null;
 
     // register
     const reg = classifyRegister(op);
@@ -48,7 +53,7 @@ function classifyOperand(op) {
         return classifyMemory(op);
     }
 
-    throw new Error("Nieznany operand: " + op);
+    return null;
 }
 
 function inferMemoryWidth(memType, otherType) {
@@ -59,19 +64,25 @@ function inferMemoryWidth(memType, otherType) {
 }
 
 function parseInstruction(instr) {
-    instr = instr.trim().toLowerCase();
+    if (typeof instr !== 'string') return null;
 
-    let [mnemonic, op1raw, op2raw] = instr.split(/\s+/);
-    //if (!rest) return mnemonic;
+    const trimmed = instr.trim().toLowerCase();
+    if (!trimmed) return null;
 
-    /*const ops = rest.split(",").map(s => s.trim());
-    console.log(rest)
-    const op1raw = ops[0];
-    const op2raw = ops[1];*/
-    op1raw = op1raw.replace(',','')
+    const parts = trimmed.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return null;
 
-    const op1 = classifyOperand(op1raw);
-    const op2 = op2raw ? classifyOperand(op2raw) : null;
+    const [mnemonic, op1raw, op2raw] = parts;
+
+    const byMnemonic = instructions.find(entry => entry.mnemonic.split(' ')[0] === mnemonic);
+    if (!byMnemonic) {
+        return null//byMnemonic.mnemonic;
+    }
+
+    const op1 = classifyOperand(op1raw ? op1raw.replace(/,$/, '') : null);
+    const op2 = op2raw ? classifyOperand(op2raw.replace(/,$/, '')) : null;
+
+    if (!op1 || (op2raw && op2 === null)) return null;
 
     let o1 = op1;
     let o2 = op2;
@@ -87,33 +98,5 @@ function parseInstruction(instr) {
     if (o2) return `${mnemonic} ${o1}, ${o2}`;
     return `${mnemonic} ${o1}`;
 }
-
-
-
-
-
-console.log(parseInstruction("mov rax, 5"));
-// "mov r64, imm8"
-
-console.log(parseInstruction("mov eax, 123456"));
-// "mov r32, imm32"
-
-console.log(parseInstruction("mov [rax], rbx"));
-// "mov m, r64"
-
-console.log(parseInstruction("push rdi"));
-// "push r64"
-
-console.log(parseInstruction("lea rax, [rbx+4]"));
-// "lea r64, m"
-
-console.log(parseInstruction("mov rax, [0x00000000]"));
-//  mov r64, r/m64
-
-console.log(parseInstruction("call [0x00000000]"));
-//  call r/m64
-
-console.log(parseInstruction("lea rcx, [0x00000000]"));
-//  lea r64, r/m64
 
 module.exports = parseInstruction

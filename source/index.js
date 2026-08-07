@@ -2,6 +2,7 @@ const fs = require('fs')
 const parseInstruction = require('./mnemonic.js')
 const parser = require('./opcode.js')
 const Prepare = require('./prepare.js')
+const convert = require('./convert.js')
 
 let fileName = process.argv[2]
 
@@ -129,187 +130,347 @@ function hexToLE(hex) {
     return bytes.reverse().join("");
 }
 
+function substituteMacroParameters(line, params, args){
+    if(!params || !params.length){
+        return line
+    }
+    if(typeof line === 'string'){
+        return params.reduce((current, param, index) => {
+            const replacement = args[index] !== undefined ? args[index] : param
+            return current.replace(new RegExp('\\b' + param + '\\b', 'g'), replacement)
+        }, line)
+    }
+    if(typeof line === 'object' && line !== null){
+        const copy = { ...line }
+        if(copy.left){
+            copy.left = substituteMacroParameters(copy.left, params, args)
+        }
+        if(copy.right){
+            copy.right = substituteMacroParameters(copy.right, params, args)
+        }
+        if(Array.isArray(copy.then)){
+            copy.then = copy.then.map(item => substituteMacroParameters(item, params, args))
+        }
+        if(Array.isArray(copy.else)){
+            copy.else = copy.else.map(item => substituteMacroParameters(item, params, args))
+        }
+        return copy
+    }
+    return line
+}
+
 
 
 const REPL = []
 const DEFINES = {}
 let newLines = []
-let OFFSET = 0
 let totalOFFSET = 0
 let ADDR = {}
-lines.map(line=>{
-    line = line.replace(/\;.*/gm,'').trim()
 
-    const instruction = line.trim().split(/\s+/)[0]
-    let parameters = line.replace(instruction,'').trim().split(',')
-        .map(p=>p.trim())
-    //console.log(instruction,parameters)
+const DATASET = {}
+const MACRO = {}
+let activeMacros = null
 
-    let result = ''
+DATASET['OFFSET'] = 0
 
-    if((line.indexOf('=')>-1)&&(line.indexOf('OFFSET')==-1)){
-        let [name,params] = line.split('=').map(t=>t.trim())
-        let [off,addrName] = params.split('+').map(t=>t.trim())
-        DEFINES[name]={
-            off:Number(off),addrName
-        }
-        return ''
+for(let index=0;index<lines.length;index++){
+    let line = lines[index]
+    if(!line.trim().length){
+        continue
     }
+    //console.log('line: ',line)
+    let [cmd, ...args] = line.split(/\s+/)
 
-    if(['db','dw','dd','dq'].includes(instruction)){
-        let bytes = 8
-        if(instruction=='dd'){
-            bytes = 4
-        }else if(instruction=='dw'){
-            bytes = 2
-        }else if(instruction=='db'){
-            bytes = 1
-        }
-        parameters=parameters.map(parameter=>{
-            if(DEFINES[parameter]!=undefined){
-                REPL.push({
-                    kind: 'define',
-                    OFFSET: totalOFFSET,
-                    length: 4,
-                    name: parameter,
-                    off: OFFSET,
-                    //add: Number(add),
-                })
-                parameter = '0'
+    if(cmd=='macro'){
+        let macroName = args[0]
+        let params = args.slice(1).map(p => p.replace(/,$/, ''))
+        activeMacros = { name: macroName, params, body: [] }
+        MACRO[macroName] = activeMacros
+        line = ''
+    }
+    if(activeMacros !== null && cmd !== 'macro' && !(cmd=='end' && args[0]=='macro')){
+        if(cmd=='if'){
+            let query = line.replace(cmd,'').trim()
+            let then = []
+            let eelse = []
+            let e = false
+            let ifIndex = index
+            lines[ifIndex] = ''
+            while(lines[++index].trim() != 'end if'){
+                if(lines[index].trim() === 'else'){
+                    e = true
+                    lines[index] = ''
+                    continue
+                }
+                if(e){
+                    eelse.push(lines[index])
+                } else {
+                    then.push(lines[index])
+                }
+                lines[index] = ''
             }
-            if(parameter.indexOf('+')>-1){
-                console.log('parameter',parameter)
-                const [add,name] = parameter.split('+').map(t=>t.trim())
-                REPL.push({
-                    kind: 'addrRVA',
-                    OFFSET: totalOFFSET,
-                    length: 4,
-                    name,
-                    off: OFFSET,
-                    add: Number(add),
-                })
-                parameter = '0'
+            lines[index] = ''
+            let [op,left,operation,right] = /([a-zA-Z0-9\_]+)(\=\=|\!\=|\=|\>\=|\<\=)([a-zA-Z0-9\_]+)/.exec(query)
+            let iff = {
+                left,operation,right,
+                then,
+                else:eelse,
+                invoke(){
+                    //console.log(this)
+                    if(evaluateCondition(this.left, this.operation, this.right)){
+                        return this.then
+                    }else{
+                        return this.else
+                    }
+                }
             }
-            return parameter
-        })
-        parameters = parameters.map(parameter=>{
-            const num = numToHex(parameter,bytes)
-            if(num===null){
-                parameter = parameter.substring(1,parameter.length-1)
-                return txtToHex(parameter,bytes)
-            }
-            return hexToLE(num)
-        })
-        result = parameters.map(formatHex).join(' ')
-    }
-    if(instruction=='OFFSET'){
-        parameters = parameters[0].trim().split(' ')
-        console.log('OFFSET',parameters)
-        if(parameters[0]=='='){
-            OFFSET = Number(parameters[1])
-        }
-        if(parameters[0]=='-='){
-            OFFSET -= Number(parameters[1])
-        }
-        if(parameters[0]=='+='){
-            OFFSET += Number(parameters[1])
-        }
-        return
-    }
-    if(instruction.endsWith(':')){
-        const name = instruction.substring(0,instruction.length-1)
-        console.log(name+': ',toHex(OFFSET))
-        ADDR[name] = OFFSET
-        return
-    }
-    if(instruction=='ret'){
-        result = 'c3'
-    }
-    if(instruction=='hex'){
-        result = line.replace('hex','').trim()
-    }
-    if(instruction=='ALIGN'){
-        const alignValue = Number(parameters[0]) || 1
-        console.log('ALIGN', totalOFFSET, 'to', alignValue)
-        let max = Math.ceil(totalOFFSET / alignValue) * alignValue
-        console.log('max', max)
-        const pad = max - totalOFFSET
-        if (pad > 0) {
-            result = Array(pad).fill('00').join(' ')
+            activeMacros.body.push(iff)
+        }else{
+            activeMacros.body.push(line)
         }
     }
-    let name = parameters[0].substring(1,parameters[0].length-1)
-    if((instruction=='lcall')&&(FUNCS[name]!=undefined)){
-        console.log('instruction',instruction)
-        result = 'e8 00 00 00 00'
-        REPL.push({
-            kind: 'addrName',
-            OFFSET: totalOFFSET,
-            length: result.split(' ').length,
-            name,
-            off: OFFSET,
-            add: 0,
-        })
+    if((cmd=='end')&&(args[0]=='macro')){
+        activeMacros = null
+        line = ''
     }
+    lines[index] = activeMacros ? '' : line
+}
 
-    if((result.length==0)&&(instruction.length)){
-        console.log('instruction',instruction)
+console.log(lines)
 
-        let name
-        if(parameters[0].indexOf('[')>-1){
-            name = parameters[0].substring(1,parameters[0].length-1)
-            if(!ADDR[name]){
-                parameters[0] = '[0x00000000]'
-            }
-        }
-        if(parameters[1]&&parameters[1].indexOf('[')>-1){
-            name = parameters[1].substring(1,parameters[1].length-1)
-            if(!ADDR[name]){
-                parameters[1] = '[0x00000000]'
-            }
-        }
+for(let index=0;index<lines.length;index++){
+    let line = lines[index]
+    function parseLine(line){
+        let result = ''
 
-        
+        line = line.replace(/\;.*/gm,'').trim()
 
-        let pi = parseInstruction(instruction+' '+(parameters.join(', ')))
-        console.log('...',pi,parameters)
-        if(pi.indexOf(', imm')>-1){
-            parameters[1] = Number(parameters[1])
-        }
-        /*if(pi.indexOf(' m')>-1){
-            pi = pi.replace(' m', ' rel32')
-            parameters[0] = '[0x00000000]'
+        /*line = stripComment(line)
+        const { line: processedLine } = parseLabel(line)
+        if(!processedLine || !processedLine.trim()){
+            return ''
         }*/
-        console.log('...',pi,parameters)
-        const code = parser.encode(pi, parameters);
-        console.log([...code]);
-        if((pi.indexOf('r/m64')>-1)&&name){
+
+        let [cmd, ...rest] = line.split(/\s+/)
+        let restText = rest.join(' ')
+        let args = restText.split(',').map(a=>a.trim()).filter(a=>a.length>0)
+
+        if(typeof line=='object'){
+            return line.invoke().map(parseLine)
+        }
+
+        const instruction = line.trim().split(/\s+/)[0]
+        let parameters = line.replace(instruction,'').trim().split(',')
+            .map(p=>p.trim())
+        //console.log(instruction,parameters)
+
+        if((line.indexOf('=')>-1)&&(line.indexOf('OFFSET')==-1)){
+            let [name,params] = line.split('=').map(t=>t.trim())
+            let [off,addrName] = params.split('+').map(t=>t.trim())
+            DEFINES[name]={
+                off:Number(off),addrName
+            }
+            return ''
+        }
+
+        if(['db','dw','dd','dq'].includes(instruction)){
+            let bytes = 8
+            if(instruction=='dd'){
+                bytes = 4
+            }else if(instruction=='dw'){
+                bytes = 2
+            }else if(instruction=='db'){
+                bytes = 1
+            }
+            parameters=parameters.map(parameter=>{
+                if(DEFINES[parameter]!=undefined){
+                    REPL.push({
+                        kind: 'define',
+                        OFFSET: totalOFFSET,
+                        length: 4,
+                        name: parameter,
+                        off: DATASET['OFFSET'],
+                        //add: Number(add),
+                    })
+                    parameter = '0'
+                }
+                if(parameter.indexOf('+')>-1){
+                    console.log('parameter',parameter)
+                    const [add,name] = parameter.split('+').map(t=>t.trim())
+                    REPL.push({
+                        kind: 'addrRVA',
+                        OFFSET: totalOFFSET,
+                        length: 4,
+                        name,
+                        off: DATASET['OFFSET'],
+                        add: Number(add),
+                    })
+                    parameter = '0'
+                }
+                return parameter
+            })
+            parameters = parameters.map(parameter=>{
+                const num = numToHex(parameter,bytes)
+                if(num===null){
+                    parameter = parameter.substring(1,parameter.length-1)
+                    return txtToHex(parameter,bytes)
+                }
+                return hexToLE(num)
+            })
+            result = parameters.map(formatHex).join(' ')
+        }
+        if(instruction=='OFFSET'){
+            parameters = parameters[0].trim().split(' ')
+            console.log('OFFSET',parameters)
+            if(parameters[0]=='='){
+                DATASET['OFFSET'] = Number(parameters[1])
+            }
+            if(parameters[0]=='-='){
+                DATASET['OFFSET'] -= Number(parameters[1])
+            }
+            if(parameters[0]=='+='){
+                DATASET['OFFSET'] += Number(parameters[1])
+            }
+            return
+        }
+        if(instruction.endsWith(':')){
+            const name = instruction.substring(0,instruction.length-1)
+            console.log(name+': ',toHex(DATASET['OFFSET']))
+            ADDR[name] = DATASET['OFFSET']
+            return
+        }
+        if(instruction=='ret'){
+            result = 'c3'
+        }
+        if(instruction=='hex'){
+            result = line.replace('hex','').trim()
+        }
+        if(instruction=='ALIGN'){
+            const alignValue = Number(parameters[0]) || 1
+            console.log('ALIGN', totalOFFSET, 'to', alignValue)
+            let max = Math.ceil(totalOFFSET / alignValue) * alignValue
+            console.log('max', max)
+            const pad = max - totalOFFSET
+            if (pad > 0) {
+                result = Array(pad).fill('00').join(' ')
+            }
+        }
+        let name = parameters[0].substring(1,parameters[0].length-1)
+        if((instruction=='lcall')&&(FUNCS[name]!=undefined)){
+            console.log('instruction',instruction)
+            result = 'e8 00 00 00 00'
             REPL.push({
-                kind: 'addr',
+                kind: 'addrName',
                 OFFSET: totalOFFSET,
-                length: code.length,
+                length: result.split(' ').length,
                 name,
-                off: OFFSET,
+                off: DATASET['OFFSET'],
+                add: 0,
             })
         }
-        result = code.join(' ')
+
+        if(MACRO[instruction]!=undefined){
+            const macro = MACRO[instruction]
+            const invocationArgs = restText.length
+                ? restText.split(',').map(a=>a.trim()).filter(a=>a.length>0)
+                : []
+            let result = []
+            for(let bodyLine of macro.body){
+                let substituted = substituteMacroParameters(bodyLine, macro.params, invocationArgs)
+                result.push(parseLine(substituted))
+            }
+            return result
+        }
+
+        if((result.length==0)&&(instruction.length)){
+            console.log('instruction',instruction)
+
+            let name
+            if(parameters[0].indexOf('[')>-1){
+                name = parameters[0].substring(1,parameters[0].length-1)
+                if(!ADDR[name]){
+                    parameters[0] = '[0x00000000]'
+                }
+            }
+            if(parameters[1]&&parameters[1].indexOf('[')>-1){
+                name = parameters[1].substring(1,parameters[1].length-1)
+                if(!ADDR[name]){
+                    parameters[1] = '[0x00000000]'
+                }
+            }
+
+            
+
+            let pi = parseInstruction(instruction+' '+(parameters.join(', ')))
+            console.log('...',pi,parameters,instruction)
+            if(pi.indexOf(', imm')>-1){
+                parameters[1] = Number(parameters[1])
+            }
+            /*if(pi.indexOf(' m')>-1){
+                pi = pi.replace(' m', ' rel32')
+                parameters[0] = '[0x00000000]'
+            }*/
+            console.log('...',pi,parameters)
+            const code = parser.encode(pi, parameters);
+            console.log([...code]);
+            if((pi.indexOf('r/m64')>-1)&&name){
+                REPL.push({
+                    kind: 'addr',
+                    OFFSET: totalOFFSET,
+                    length: code.length,
+                    name,
+                    off: DATASET['OFFSET'],
+                })
+            }
+            result = code.join(' ')
+        }
 
         
+
+
+        if(result.trim().length==0){
+            result = line
+        }
+
+        return result
     }
 
+    lines[index] = parseLine(line)
 
-    if(result.trim().length==0){
-        result = line
+    if(!lines[index]){
+        lines[index] = ''
     }
 
-    const tokenCount = result.trim().length === 0
+    console.log(lines[index])
+    //console.log('result',result)
+    if(Array.isArray(lines[index])){
+        lines[index] = lines[index].flat().map(res=>{
+            if(res&&res.length){
+                let ress = res.trim().split(' ')//convert.splitHexToPairs(res)
+                DATASET['OFFSET'] = Number(DATASET['OFFSET'] || 0) + ress.length
+                totalOFFSET += ress.length
+                return ress.join(' ')
+            }else{
+                return ''
+            }
+        })
+    }
+    if (typeof lines[index] === 'string' && lines[index].trim().length) {
+        let res = lines[index].trim().split(' ')//convert.splitHexToPairs(lines[index])
+        DATASET['OFFSET'] = Number(DATASET['OFFSET'] || 0) + res.length
+        totalOFFSET += res.length
+        lines[index] = res.join(' ')
+    }
+    //return result
+
+    /*const tokenCount = result.trim().length === 0
         ? 0
         : result.trim().split(/\s+/).length
 
     totalOFFSET += tokenCount
     OFFSET += tokenCount
-    newLines.push(result)
-})
+    newLines.push(result)*/
+}
 
 
 
@@ -342,11 +503,11 @@ console.log('ExitProcess:',toHex(4156,4))
 */
 
 
-source = newLines.join('\n')
+source = lines.flat().join('\n')
 
 fs.writeFileSync('./examples/'+fileName+'.txt', source)
 
-let exeTxt = source.replace(/\ |\n/gm,'')
+let exeTxt = source.replace(/\ |\n|\r/gm,'')
 
 function hexToUint8Array(hex) {
     hex = hex.replace(/\s+/g, ""); // usuń spacje/newline jeśli są
