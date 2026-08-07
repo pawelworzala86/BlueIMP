@@ -368,6 +368,8 @@ function writeUInt32LE(array, value, offset) {
   array[offset + 3] = (value >> 24) & 0xff;
 }
 
+const REPLS = []
+
 for(RP of REPL){
     console.log(RP)
     if(RP.kind=='define'){
@@ -378,18 +380,21 @@ for(RP of REPL){
         console.log('addrName',addr2,toHex(addr2,4))
 
         writeUInt32LE(u8array, addr2, offset);
+        REPLS.push({offset,value:addr2})
     }else if(RP.kind=='addrName'){
         let offset = RP.OFFSET + 1
         console.log('ADDR[RP.name]',ADDR[RP.name])
         let addr2 = ADDR[RP.name] - (RP.off + RP.length)
         console.log('addrName',addr2,toHex(addr2,4))
         writeUInt32LE(u8array, addr2, offset);
+        REPLS.push({offset,value:addr2})
     }else if(RP.kind=='addrRVA'){
         let offset = RP.OFFSET //+ 1
         console.log('ADDR[RP.name]',ADDR[RP.name])
         let addr2 = ADDR[RP.name] + RP.add
         console.log('addrName',addr2,toHex(addr2,4))
         writeUInt32LE(u8array, addr2, offset);
+        REPLS.push({offset,value:addr2})
     }else{
         let offset = RP.OFFSET + (RP.length-4)
 
@@ -397,6 +402,7 @@ for(RP of REPL){
         console.log('addr',addr2,toHex(addr2,4))
 
         writeUInt32LE(u8array, addr2, offset);
+        REPLS.push({offset,value:addr2})
     }
 }
 
@@ -409,3 +415,5 @@ const hex = hexBytes.join('')
 fs.writeFileSync('./examples/'+fileName+'.repl.txt', hex)
 
 fs.writeFileSync('./examples/'+fileName+'.exe', u8array)
+
+fs.writeFileSync('./repls.json', JSON.stringify(REPLS,null,4))
