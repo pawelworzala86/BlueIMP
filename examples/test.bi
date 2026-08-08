@@ -1,5 +1,6 @@
 PE64
 
+OFFSET = 0
 
 start:
     sub rsp, 40

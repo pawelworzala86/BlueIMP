@@ -1,6 +1,5 @@
-
-
-hex 4D 5A 00 00 00 00 00 00 00 00 00
+macro PE64
+    hex 4D 5A 00 00 00 00 00 00 00 00 00
     hex 00 00 00 00    ;RIP-rel offset do "Hello World!"
     hex 00 00 00 00
     hex 00 00 00 00    ;RIP-rel offset do IAT.printf
@@ -68,9 +67,11 @@ hex 4D 5A 00 00 00 00 00 00 00 00 00
     hex 00 00 00 00 00 00 00 00 00 00 00 00
     hex 40 00 00 C0    ;INITIALIZED_DATA | READ | WRITE
     hex 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-    
-    OFFSET = 0
+end macro
 
+PE64
+
+OFFSET = 0
 
 start:
     sub rsp, 40

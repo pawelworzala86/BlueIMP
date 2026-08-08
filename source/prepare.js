@@ -21,7 +21,7 @@ function Prepare(code){
         }
     })
 
-    const MACRO = []
+    /*const MACRO = []
 
     code = code.replace(/macro([\s\S]+?)end macro/gm,match=>{
         let name = match.split(' ')[1].trim()
@@ -51,7 +51,7 @@ function Prepare(code){
             })
             return result
         })
-    }
+    }*/
     //fs.writeFileSync('./prepared.asm', code)
 
     //process.exit()
